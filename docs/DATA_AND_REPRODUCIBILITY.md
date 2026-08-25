@@ -28,3 +28,9 @@ spy-validate run --config configs/default.json --input-csv /path/to/spy_adjusted
 3. **Tier 3 — canonical audit rerun:** the exact private raw snapshot is identified by SHA-256 and rerun in the locked Python 3.12 environment. It is private because raw vendor bytes and point-level evidence are not redistributed by default.
 
 The reference report names the exact environment file and Git commit. No random split or test-set hyperparameter tuning is used.
+
+For provenance, `environment.json` separates the `code_commit` that generated
+predictions and metrics from the `artifact_repository_commit` that introduced
+the derived reference bundle. The public synthetic demo is a deterministic
+price-only functionality check and must not be combined with the SPY reference
+metrics.
