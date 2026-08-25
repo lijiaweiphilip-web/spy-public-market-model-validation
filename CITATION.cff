@@ -5,5 +5,5 @@ authors:
     given-names: Jiawei
 version: 0.1.0
 repository-code: https://github.com/lijiaweiphilip-web/spy-public-market-model-validation
-message: "If this research code is useful, please cite the repository release."
+message: "If this research code is useful, please cite this repository."
 license: MIT
