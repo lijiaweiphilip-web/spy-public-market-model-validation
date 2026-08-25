@@ -4,14 +4,19 @@ import numpy as np
 import pandas as pd
 
 from .config import RunConfig
-from .features import FEATURE_COLUMNS
+from .features import EWMA_FEATURE_COLUMN, FEATURE_COLUMNS
 from .metrics import regression_metrics
 from .models import make_models
 from .splits import expanding_purged_folds
 
 
-def _assign_regime(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
+def _regime_thresholds(train: pd.DataFrame) -> tuple[float, float]:
     low, high = train["realised_var_20"].quantile([1 / 3, 2 / 3]).tolist()
+    return float(low), float(high)
+
+
+def _assign_regime(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
+    low, high = _regime_thresholds(train)
     return np.select(
         [test["realised_var_20"] <= low, test["realised_var_20"] >= high],
         ["low_prior_vol", "high_prior_vol"],
@@ -42,6 +47,7 @@ def run_walk_forward(frame: pd.DataFrame, cfg: RunConfig) -> dict[str, pd.DataFr
         x_test = test[FEATURE_COLUMNS].to_numpy(dtype=float)
         y_test = test["target_realised_variance"].to_numpy(dtype=float)
         regimes = _assign_regime(train, test)
+        regime_low, regime_high = _regime_thresholds(train)
         models = make_models(cfg)
 
         for model_name, model in models.items():
@@ -56,7 +62,11 @@ def run_walk_forward(frame: pd.DataFrame, cfg: RunConfig) -> dict[str, pd.DataFr
                     "train_target_end": fold.train_end_timestamp.date().isoformat(),
                     "test_start": fold.test_start_timestamp.date().isoformat(),
                     "test_end": fold.test_end_timestamp.date().isoformat(),
+                    "regime_low_threshold": regime_low,
+                    "regime_high_threshold": regime_high,
                     "calibration_factor": model.calibration_factor,
+                    "calibration_method": model.calibration_method,
+                    "calibration_rows": model.calibration_rows,
                     "prediction_clipping_count": model.clipping_count,
                     **metrics,
                 }
@@ -103,6 +113,50 @@ def run_walk_forward(frame: pd.DataFrame, cfg: RunConfig) -> dict[str, pd.DataFr
                             "importance": float(importance),
                         }
                     )
+
+        ewma_prediction = np.maximum(
+            test[EWMA_FEATURE_COLUMN].to_numpy(dtype=float) * cfg.target_horizon_days,
+            cfg.prediction_floor,
+        )
+        ewma_metrics = regression_metrics(y_test, ewma_prediction)
+        fold_rows.append(
+            {
+                "fold": fold.fold_id,
+                "model": "ewma_baseline",
+                "train_rows": len(train),
+                "train_target_end": fold.train_end_timestamp.date().isoformat(),
+                "test_start": fold.test_start_timestamp.date().isoformat(),
+                "test_end": fold.test_end_timestamp.date().isoformat(),
+                "regime_low_threshold": regime_low,
+                "regime_high_threshold": regime_high,
+                "calibration_factor": 1.0,
+                "calibration_method": "fixed_lambda_0.94",
+                "calibration_rows": 0,
+                "prediction_clipping_count": 0,
+                **ewma_metrics,
+            }
+        )
+        clipping_rows.append(
+            {
+                "fold": fold.fold_id,
+                "model": "ewma_baseline",
+                "clipping_count": 0,
+                "test_rows": len(test),
+            }
+        )
+        for row_idx, (_, source_row) in enumerate(test.iterrows()):
+            prediction_rows.append(
+                {
+                    "fold": fold.fold_id,
+                    "model": "ewma_baseline",
+                    "feature_date": source_row["feature_timestamp"].date().isoformat(),
+                    "target_start_date": source_row["target_start_timestamp"].date().isoformat(),
+                    "target_end_date": source_row["target_end_timestamp"].date().isoformat(),
+                    "actual": float(y_test[row_idx]),
+                    "prediction": float(ewma_prediction[row_idx]),
+                    "regime": str(regimes[row_idx]),
+                }
+            )
 
         for seed in cfg.stability_seeds:
             stable_model = make_models(cfg, seed=seed)["random_forest"]

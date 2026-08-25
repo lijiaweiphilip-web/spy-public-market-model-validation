@@ -1,8 +1,10 @@
 .github/
 configs/
 docs/
+requirements/
+scripts/
 results/reference_run/
-src/
+src/spy_validation/
 tests/
 .gitattributes
 .gitignore
@@ -10,4 +12,6 @@ CITATION.cff
 LICENSE
 PUBLISH_ALLOWLIST.txt
 README.md
+FUTURE_WORK.md
+CHANGELOG.md
 pyproject.toml

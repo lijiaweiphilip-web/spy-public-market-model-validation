@@ -19,14 +19,15 @@ The default configuration produces 27 non-overlapping 60-row test folds after an
 ## Models
 
 - Historical mean baseline
+- RiskMetrics-style EWMA baseline with a fixed lambda=0.94 (see the [RiskMetrics Technical Document](https://www.msci.com/research-and-insights/paper/1996-riskmetrics-technical-document)). Its daily conditional-variance estimate is multiplied by the five-day horizon under a constant-variance approximation; lambda is not selected on the test set.
 - Ridge regression on a log target
 - Random forest on a log target
 
-Machine-learning predictions use training-only calibration and training-derived clipping bounds. Hyperparameters are fixed before test evaluation.
+Machine-learning predictions use a terminal inner temporal calibration block inside each outer training set. The inner estimator is fit strictly before that block and is separated from the outer test block by the target horizon. Clipping bounds are derived from training data only. Hyperparameters are fixed before test evaluation. See `CALIBRATION_AUDIT.md` for the remaining calibration limitations.
 
 ## Evaluation
 
-The evidence bundle includes point-level out-of-fold predictions, MAE, RMSE, scale-invariant QLIKE, calibration ratio, rank correlation, calibration bins, prior-volatility regime slices, bootstrap fold comparisons, Ridge coefficient stability, random-forest feature importance, random-forest seed stability and a prediction-to-decision turnover cost diagnostic.
+The evidence bundle includes point-level out-of-fold predictions, MAE, RMSE, scale-invariant QLIKE, calibration ratio, rank correlation, calibration bins, prior-volatility regime slices, bootstrap fold comparisons, Ridge coefficient stability, random-forest feature importance, random-forest seed stability and a prediction-to-decision turnover cost diagnostic. QLIKE is included as a volatility-forecast loss with source context from [Patton (2011)](https://doi.org/10.1016/j.jeconom.2010.03.034). The private canonical manifest hashes every written artifact after REPORT, environment and diagnostics are complete; the public derived bundle is listed in [`PUBLIC_REFERENCE_MANIFEST.json`](../results/reference_run/PUBLIC_REFERENCE_MANIFEST.json).
 
 ## Transaction-cost sensitivity
 

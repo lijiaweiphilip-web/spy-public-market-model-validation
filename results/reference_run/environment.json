@@ -1,6 +1,21 @@
 {
-  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
-  "platform": "Linux-6.18.35-x86_64-with-glibc2.41",
-  "numpy": "2.3.5",
-  "pandas": "2.2.3"
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "numpy": "2.5.2",
+  "pandas": "3.0.5",
+  "scikit_learn": "1.9.0",
+  "matplotlib": "3.11.1",
+  "tabulate": "0.10.0",
+  "package_version": "0.1.0",
+  "run_type": "local_or_canonical",
+  "run_label": "Reference-run",
+  "data_description": "SPY daily adjusted-close data",
+  "code_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
+  "artifact_repository_commit": "9b732b1c448d436e59808b816dfec2b2567996e0",
+  "git_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
+  "config_sha256": "50714ae7f90ad53f8d025dfa4855f88c91d03a299598d320df123d231fe22905",
+  "source_sha256": "eae913fd646ed32c3904d9b6e61beb2216c103bacaf16a0a36eab7528970710a",
+  "calibration_method": "inner_temporal_block",
+  "calibration_block_rows": 120,
+  "ewma_lambda": 0.94
 }
