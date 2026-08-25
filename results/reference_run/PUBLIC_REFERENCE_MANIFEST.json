@@ -63,13 +63,13 @@
     "failure_analysis.md": "f6f77334e03ee20ac62db43c371cde4c98cf07d35272b798c6edb340c73d9f03",
     "fold_metrics.csv": "73b5d204ec80492e07aa9fed77a8f3e7da33fdb6908b728c481f9dea851d43cb",
     "fold_rmse.png": "35ce3ff515452424d51e79dd47827c5ce2fba4756b5e14884f26ee3a9cff82e9",
-    "model_card.md": "67181b3851a8b5d1ed9675e874d368d5ac9f1876547b182c31fc8669e89c9d7d",
+    "model_card.md": "3347a39b5b4a1c61d4fb33da158735482f717e14a95ebcb1fdffcda9922e2c9b",
     "prediction_clipping_audit.csv": "729029fc4b7c5fac0ff14554626d5cd8229d7edf445342823a2a4bbea23d9db5",
     "random_forest_feature_importance.csv": "d5a292bf1acc2a2b4a55a9cda46c68b797502649e523b98ac6ce97146d3e9efe",
     "random_forest_seed_stability.csv": "21743eac3610db9e1b8a51d55f044ed4a98fb6b4ef2ab8942909df41fcd118eb",
     "regime_metrics.csv": "e44b2e0d2cdfdf73094d0f474f89b6582e08ad0e61fee3f64e385d0202b1033b",
     "regime_qlike.png": "798503d7054462c6cc455329afbebd557d42869ee830821961c3c4402796d989",
-    "REPORT.md": "d53b0a2d7662b51329f8feb4b56bb12a3592a2fd45fa58cc1ea22fb974a64858",
+    "REPORT.md": "c00aed24c98ea17caf80afcae9c304035031dcb5f4b1caf5fb9b9a2294a0b7b5",
     "ridge_coefficients.csv": "bded558ea7a2c2200029c9f6789b55c7cf6510bf24656dbd1f2185d29e51999e"
   }
 }

@@ -64,7 +64,6 @@ def _reset_directory(path: Path) -> None:
 def _write_overview(output_dir: Path) -> None:
     aggregate = pd.read_csv(output_dir / "aggregate_metrics.csv")
     fold = pd.read_csv(output_dir / "fold_metrics.csv")
-    regime = pd.read_csv(output_dir / "regime_metrics.csv")
     labels = {
         "mean_baseline": "Mean",
         "ewma_baseline": "EWMA",
@@ -77,27 +76,27 @@ def _write_overview(output_dir: Path) -> None:
     axes[0].bar([labels[m] for m in left["model"]], left["qlike"], color="#315a7d")
     axes[0].set_title("Aggregate QLIKE (lower is better)")
     axes[0].set_ylabel("QLIKE")
+    axes[0].set_yscale("log")
     axes[0].tick_params(axis="x", rotation=25)
     axes[0].grid(axis="y", alpha=0.25)
+    axes[0].text(
+        0.02,
+        0.98,
+        "Ridge QLIKE instability retained",
+        transform=axes[0].transAxes,
+        va="top",
+        fontsize=8,
+        color="#8b2f2f",
+    )
 
     for model in order:
         series = fold[fold["model"] == model].sort_values("fold")
-        axes[1].plot(series["fold"], series["qlike"], marker=".", linewidth=1, label=labels[model])
-    axes[1].set_title("Fold QLIKE and volatility-regime context")
+        axes[1].plot(series["fold"], series["rmse"], marker=".", linewidth=1, label=labels[model])
+    axes[1].set_title("Purged-fold RMSE")
     axes[1].set_xlabel("Purged expanding fold")
-    axes[1].set_ylabel("QLIKE")
+    axes[1].set_ylabel("RMSE")
     axes[1].grid(alpha=0.25)
     axes[1].legend(fontsize=8)
-    # Add a compact regime note without hiding any folds or models.
-    regime_counts = regime.groupby("regime")["model"].nunique().to_dict()
-    axes[1].text(
-        0.01,
-        0.01,
-        "Regime rows: " + ", ".join(f"{k}={v} models" for k, v in sorted(regime_counts.items())),
-        transform=axes[1].transAxes,
-        fontsize=7,
-        color="#555555",
-    )
     assets_dir = output_dir.parent.parent / "docs" / "assets"
     assets_dir.mkdir(parents=True, exist_ok=True)
     fig.savefig(assets_dir / "overview.png", dpi=180)

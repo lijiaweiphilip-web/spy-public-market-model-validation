@@ -79,10 +79,10 @@ The CSV alternative requires `date` and `adjusted_close` columns. Raw-close-only
 - [`docs/CALIBRATION_AUDIT.md`](docs/CALIBRATION_AUDIT.md)
 - [`docs/DATA_AND_REPRODUCIBILITY.md`](docs/DATA_AND_REPRODUCIBILITY.md)
 - [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md)
-- [`docs/RESUME_EVIDENCE.md`](docs/RESUME_EVIDENCE.md)
 - [`FUTURE_WORK.md`](FUTURE_WORK.md)
 - [`CHANGELOG.md`](CHANGELOG.md)
-- [`docs/GITHUB_PUBLISH_CHECKLIST.md`](docs/GITHUB_PUBLISH_CHECKLIST.md)
 - [`results/reference_run/REPORT.md`](results/reference_run/REPORT.md)
+- [`results/reference_run/PUBLIC_REFERENCE_MANIFEST.json`](results/reference_run/PUBLIC_REFERENCE_MANIFEST.json)
+- [`docs/REFERENCES.md`](docs/REFERENCES.md)
 
 ![Canonical validation overview](docs/assets/overview.png)

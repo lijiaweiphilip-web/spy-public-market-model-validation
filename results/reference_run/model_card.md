@@ -16,7 +16,7 @@ Can simple historical, EWMA and machine-learning models produce stable forecasts
 - Fixed hyperparameters; no random split and no test-set tuning
 
 ## Intended use
-Research-method demonstration, RA interview discussion, and reproducibility evidence.
+Research-method demonstration and reproducibility evidence.
 
 ## Not intended for
 Live trading, investment recommendations, alpha claims, P&L claims, portfolio construction or production risk management.

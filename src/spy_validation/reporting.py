@@ -255,7 +255,7 @@ def write_outputs(
     intended_use = (
         "Public synthetic functionality and reproducibility demonstration."
         if run_type == "synthetic_demo"
-        else "Research-method demonstration, RA interview discussion, and reproducibility evidence."
+        else "Research-method demonstration and reproducibility evidence."
     )
     model_card = f"""# Model card
 
@@ -332,7 +332,7 @@ See `failure_analysis.md` and `docs/CALIBRATION_AUDIT.md`.
         bootstrap.to_markdown(index=False),
         "",
         "The public reference bundle contains derived summaries only; raw vendor bytes, point-level predictions and exposure paths remain private evidence.",
-        "The final `run_manifest.json` hashes every artifact written above.",
+        "The private canonical run manifest hashes the complete evidence bundle. Public reference artifacts are independently hashed in [PUBLIC_REFERENCE_MANIFEST.json](PUBLIC_REFERENCE_MANIFEST.json).",
         "",
     ]
     (output_dir / "REPORT.md").write_text("\n".join(report), encoding="utf-8")

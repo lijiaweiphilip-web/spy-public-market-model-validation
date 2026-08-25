@@ -1,27 +1,25 @@
 # Reference-run provenance
 
-V4.6 keeps the supplied handoff reference, the V4.4 local rerun, the V4.5
-canonical run, and the final V4.6
-canonical reference run separate. The public reference bundle is generated
-from the canonical run only; it is never assembled by mixing nearby metrics
-from different environments.
+Supplied handoff and local reruns are kept separate from the canonical
+reference run. The public reference bundle is generated from one canonical run
+only; it is never assembled by mixing nearby metrics from different
+environments.
 
-The handoff and V4.4 local results differ by small floating-point amounts and
+The handoff and earlier local results differ by small floating-point amounts and
 were produced under different Python/scientific-library versions. That is not
 treated as a scientific contradiction, but it is not an exact reproducibility
-receipt. The V4.5 canonical run records Python, platform, package versions,
-code commit, artifact/repository commit, configuration hash, source-data hash,
-and every public artifact hash in one manifest. In `environment.json`,
+receipt. The canonical run records Python, platform, package versions, code
+commit, artifact/repository commit, configuration hash, source-data hash, and
+every public artifact hash in one manifest. In `environment.json`,
 `code_commit` identifies the source state that produced predictions and metrics;
 `artifact_repository_commit` identifies the repository commit that first
 introduced the derived reference bundle. The raw vendor snapshot and
 point-level predictions stay private. See `docs/DATA_AND_REPRODUCIBILITY.md`
 for the public/private tiers.
 
-## V4.6 canonical receipt
+## Canonical receipt
 
-- Canonical run: `13_SPY_PRIVATE_RERUN/run_canonical_v4_6_20260825_192325`
-  (`20260825T112527Z`).
+- Canonical run ID: `20260825T112527Z`.
 - `code_commit`: `69dbbab8d6ea5d461c799416c0017e8960ca0afc`.
 - `artifact_repository_commit`: `9b732b1c448d436e59808b816dfec2b2567996e0`.
   A subsequent metadata-only commit records the final provenance fields.
