@@ -87,6 +87,8 @@ def test_public_allowlist_excludes_private_artifacts():
     allowlist = Path(__file__).resolve().parents[1] / "PUBLISH_ALLOWLIST.txt"
     text = allowlist.read_text(encoding="utf-8")
     assert "requirements/" in text
+    assert "src/spy_validation/" in text
+    assert "src/\n" not in text
     assert "private_local_evidence" not in text
     assert "predictions_oof.csv" not in text
     assert "illustrative_exposure_path.csv" not in text

@@ -37,8 +37,8 @@ def _package_version() -> str:
         return "local-source"
 
 
-def _git_commit(config_path: Path) -> str:
-    repo = config_path.resolve().parent.parent
+def _git_commit(config_path: Path, repository_path: Path | None = None) -> str:
+    repo = (repository_path or config_path.resolve().parent.parent).resolve()
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -122,12 +122,13 @@ def _failure_analysis(
     calibration: pd.DataFrame,
     costs: pd.DataFrame,
     clipping: pd.DataFrame,
+    run_label: str = "reference run",
 ) -> str:
     baseline = aggregate.set_index("model").loc["mean_baseline"]
     lines = [
         "# Failure and limitation analysis",
         "",
-        "This file is generated from the reference run. It is intentionally candid: model validation is stronger when unstable or negative results remain visible.",
+        f"This file is generated from the {run_label.lower()}. It is intentionally candid: model validation is stronger when unstable or negative results remain visible.",
         "Calibration factors for Ridge and Random Forest are estimated from an inner temporal block inside each outer training set; the outer test block is never used. This is stricter than in-sample calibration but remains a small-sample diagnostic, not a guarantee of calibrated probabilities or variance forecasts.",
         "",
     ]
@@ -188,6 +189,11 @@ def write_outputs(
     exposure_path: pd.DataFrame,
     cost_summary: pd.DataFrame,
     command: str,
+    *,
+    run_label: str = "Reference-run",
+    data_description: str | None = None,
+    run_type: str = "local_or_canonical",
+    repository_path: Path | None = None,
 ) -> dict:
     """Write a complete run before hashing it.
 
@@ -241,13 +247,20 @@ def write_outputs(
         calibration,
         cost_summary,
         outputs["clipping_audit"],
+        run_label=run_label,
     )
     (output_dir / "failure_analysis.md").write_text(failure_text, encoding="utf-8")
 
+    asset_label = data_description or f"{cfg.symbol} daily adjusted-close data"
+    intended_use = (
+        "Public synthetic functionality and reproducibility demonstration."
+        if run_type == "synthetic_demo"
+        else "Research-method demonstration, RA interview discussion, and reproducibility evidence."
+    )
     model_card = f"""# Model card
 
 ## Intended research question
-Can simple historical, EWMA and machine-learning models produce stable forecasts of a five-day realised-variance proxy under purged expanding walk-forward validation on SPY daily adjusted-close data?
+Can simple historical, EWMA and machine-learning models produce stable forecasts of a five-day realised-variance proxy under purged expanding walk-forward validation on {asset_label}?
 
 ## Models
 - Historical mean baseline
@@ -262,7 +275,7 @@ Can simple historical, EWMA and machine-learning models produce stable forecasts
 - Fixed hyperparameters; no random split and no test-set tuning
 
 ## Intended use
-Research-method demonstration, RA interview discussion, and reproducibility evidence.
+{intended_use}
 
 ## Not intended for
 Live trading, investment recommendations, alpha claims, P&L claims, portfolio construction or production risk management.
@@ -272,7 +285,7 @@ See `failure_analysis.md` and `docs/CALIBRATION_AUDIT.md`.
 """
     (output_dir / "model_card.md").write_text(model_card, encoding="utf-8")
 
-    git_commit = _git_commit(config_path)
+    git_commit = _git_commit(config_path, repository_path=repository_path)
     environment = {
         "python": sys.version,
         "platform": platform.platform(),
@@ -282,6 +295,11 @@ See `failure_analysis.md` and `docs/CALIBRATION_AUDIT.md`.
         "matplotlib": importlib.metadata.version("matplotlib"),
         "tabulate": importlib.metadata.version("tabulate"),
         "package_version": _package_version(),
+        "run_type": run_type,
+        "run_label": run_label,
+        "data_description": asset_label,
+        "code_commit": git_commit,
+        "artifact_repository_commit": "PENDING_ARTIFACT_COMMIT",
         "git_commit": git_commit,
         "config_sha256": sha256(config_path),
         "source_sha256": sha256(source_path),
@@ -296,9 +314,9 @@ See `failure_analysis.md` and `docs/CALIBRATION_AUDIT.md`.
     ranked = aggregate.sort_values(["qlike", "rmse"])
     best = ranked.iloc[0]
     report = [
-        "# Reference-run report",
+        f"# {run_label} report",
         "",
-        f"- Data: SPY daily adjusted close, {feature_frame['date'].min().date()} to {feature_frame['date'].max().date()}",
+        f"- Data: {asset_label}, {feature_frame['date'].min().date()} to {feature_frame['date'].max().date()}",
         f"- Target: next {cfg.target_horizon_days}-trading-day realised variance proxy",
         f"- Validation: {fold_metrics['fold'].nunique()} purged expanding walk-forward folds",
         f"- Best aggregate QLIKE in this run: **{best['model']}** ({best['qlike']:.6f})",
@@ -328,7 +346,14 @@ See `failure_analysis.md` and `docs/CALIBRATION_AUDIT.md`.
         "manifest_version": 2,
         "run_id": datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
+        "scope": (
+            "Synthetic five-day realised-variance reproducibility demonstration; no SPY or trading-performance claim"
+            if run_type == "synthetic_demo"
+            else "SPY five-day realised-variance model validation; no trading-performance claim"
+        ),
+        "run_type": run_type,
+        "run_label": run_label,
+        "data_description": asset_label,
         "command": command,
         "source_file": source_path.name,
         "source_sha256": sha256(source_path),
@@ -336,6 +361,8 @@ See `failure_analysis.md` and `docs/CALIBRATION_AUDIT.md`.
         "config_sha256": sha256(config_path),
         "config": cfg.to_dict(),
         "environment_file": "environment.json",
+        "code_commit": git_commit,
+        "artifact_repository_commit": "PENDING_ARTIFACT_COMMIT",
         "git_commit": git_commit,
         "package_version": _package_version(),
         "raw_price_rows": int(feature_frame.attrs.get("raw_price_rows", 0)),

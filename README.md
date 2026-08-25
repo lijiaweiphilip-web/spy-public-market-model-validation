@@ -28,6 +28,10 @@ The table below is generated from `results/reference_run/aggregate_metrics.csv` 
 | Random Forest | 0.002294 | 0.577410 | 0.794853 |
 <!-- END CANONICAL_RESULTS -->
 
+<!-- BEGIN CANONICAL_INTERPRETATION -->
+The interpretation and fold-bootstrap intervals below are refreshed automatically from the same canonical run.
+<!-- END CANONICAL_INTERPRETATION -->
+
 The canonical table is refreshed only from a single final Python 3.12 run; it is not assembled from mixed historical artifacts.
 
 ## Reproducibility tiers
@@ -46,6 +50,18 @@ python -m pip install -e .[dev]
 pytest --cov=spy_validation --cov-report=term-missing --cov-fail-under=80
 ```
 
+## Quick demo
+
+The public synthetic demo is a deterministic functionality/reproducibility check, not SPY evidence:
+
+```bash
+python -m pip install -e .[dev]
+spy-validate demo --output-dir runs/demo
+spy-validate validate --run-dir runs/demo --source-path runs/demo/synthetic_adjusted_close.csv
+```
+
+It generates price-only synthetic adjusted-close data, then derives targets, purged folds, model outputs, reports and hashes through the same pipeline used for the private audit. Synthetic metrics must not be combined with the canonical SPY table.
+
 With a local Yahoo chart JSON:
 
 ```bash
@@ -62,6 +78,8 @@ The CSV alternative requires `date` and `adjusted_close` columns. Raw-close-only
 - [`docs/DATA_AND_REPRODUCIBILITY.md`](docs/DATA_AND_REPRODUCIBILITY.md)
 - [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md)
 - [`docs/RESUME_EVIDENCE.md`](docs/RESUME_EVIDENCE.md)
+- [`FUTURE_WORK.md`](FUTURE_WORK.md)
+- [`CHANGELOG.md`](CHANGELOG.md)
 - [`docs/GITHUB_PUBLISH_CHECKLIST.md`](docs/GITHUB_PUBLISH_CHECKLIST.md)
 - [`results/reference_run/REPORT.md`](results/reference_run/REPORT.md)
 

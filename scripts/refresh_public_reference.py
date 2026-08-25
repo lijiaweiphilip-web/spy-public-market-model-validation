@@ -132,6 +132,29 @@ def _refresh_readme(repo_root: Path, aggregate: pd.DataFrame) -> None:
     if not pattern.search(text):
         raise RuntimeError("README canonical-results block was not found")
     text = pattern.sub(replacement, text, count=1)
+
+    bootstrap_path = repo_root / "results" / "reference_run" / "bootstrap_model_comparison.csv"
+    bootstrap = pd.read_csv(bootstrap_path)
+    rf = aggregate.loc[aggregate["model"] == "random_forest"].iloc[0]
+    ewma_rmse = bootstrap.query("metric == 'rmse' and model == 'ewma_baseline'").iloc[0]
+    ewma_qlike = bootstrap.query("metric == 'qlike' and model == 'ewma_baseline'").iloc[0]
+    interpretation = (
+        "<!-- BEGIN CANONICAL_INTERPRETATION -->\n"
+        f"Fixed EWMA has the strongest aggregate RMSE/QLIKE in this reference run; Random Forest has the strongest rank correlation ({rf['spearman']:.3f}) but does not dominate the finance baseline, and Ridge exhibits stress-period instability.\n\n"
+        f"Fold-bootstrap differences versus the historical mean for EWMA were RMSE [{ewma_rmse['ci_lower_95']:.6f}, {ewma_rmse['ci_upper_95']:.6f}] and QLIKE [{ewma_qlike['ci_lower_95']:.6f}, {ewma_qlike['ci_upper_95']:.6f}] (lower is better; descriptive intervals for this reference run).\n"
+        "<!-- END CANONICAL_INTERPRETATION -->"
+    )
+    interpretation_pattern = re.compile(
+        r"<!-- BEGIN CANONICAL_INTERPRETATION -->.*?<!-- END CANONICAL_INTERPRETATION -->",
+        re.DOTALL,
+    )
+    if interpretation_pattern.search(text):
+        text = interpretation_pattern.sub(interpretation, text, count=1)
+    else:
+        anchor = "<!-- END CANONICAL_RESULTS -->"
+        if anchor not in text:
+            raise RuntimeError("README canonical-results end marker was not found")
+        text = text.replace(anchor, anchor + "\n\n" + interpretation, 1)
     readme_path.write_text(text, encoding="utf-8")
 
 

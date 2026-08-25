@@ -24,6 +24,10 @@ jobs:
         run: python -m pip install -e .[dev]
       - name: Tests and coverage
         run: pytest --cov=spy_validation --cov-report=term-missing --cov-fail-under=80
+      - name: Public synthetic demo
+        run: |
+          spy-validate demo --output-dir runs/ci-demo
+          spy-validate validate --run-dir runs/ci-demo --source-path runs/ci-demo/synthetic_adjusted_close.csv
       - name: Compile
         run: python -m compileall -q src tests scripts
       - name: Static checks
