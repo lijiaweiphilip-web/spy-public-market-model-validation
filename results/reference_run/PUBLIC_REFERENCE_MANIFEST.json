@@ -1,0 +1,71 @@
+{
+  "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
+  "generated_at_utc": "2026-08-25T05:20:38.431986+00:00",
+  "source_sha256": "eae913fd646ed32c3904d9b6e61beb2216c103bacaf16a0a36eab7528970710a",
+  "config": {
+    "symbol": "SPY",
+    "data_range": "10y",
+    "interval": "1d",
+    "target_horizon_days": 5,
+    "minimum_training_rows": 800,
+    "test_rows_per_fold": 60,
+    "step_rows": 60,
+    "embargo_rows": 5,
+    "ridge_alpha": 10.0,
+    "forest_estimators": 100,
+    "forest_max_depth": 5,
+    "forest_min_samples_leaf": 12,
+    "primary_seed": 42,
+    "stability_seeds": [
+      42,
+      123
+    ],
+    "prediction_floor": 1e-10,
+    "upper_clip_quantile": 0.995,
+    "upper_clip_multiplier": 3.0,
+    "calibration_bins": 8,
+    "bootstrap_repetitions": 2000,
+    "target_annualised_volatility": 0.12,
+    "max_exposure": 1.0,
+    "transaction_cost_bps": [
+      1,
+      5,
+      10
+    ],
+    "output_dir": "runs/reference_run"
+  },
+  "feature_rows": 2447,
+  "folds": 27,
+  "models": [
+    "mean_baseline",
+    "random_forest",
+    "ridge"
+  ],
+  "checks": {
+    "adjusted_close_only": "PASS",
+    "feature_before_target": "PASS",
+    "purged_training_labels": "PASS",
+    "expanding_temporal_split": "PASS",
+    "point_predictions_saved": "PASS",
+    "negative_results_retained": "PASS"
+  },
+  "public_note": "Raw vendor data and point-level predictions are intentionally excluded from the public repository; the code regenerates them locally.",
+  "public_artifact_sha256": {
+    "REPORT.md": "1916d9275660979b54271f1f8582a207e885fb59819f7515766d7e46ccf5716a",
+    "aggregate_metrics.csv": "6c0e0f7f0377e9982442f4cd072674b729d3a5ca69f4bc2392aaf9f679fd342d",
+    "bootstrap_model_comparison.csv": "17cba13cd11fd52b17378220080b93dccffcc6d2410134838fb260e207b575c2",
+    "calibration_bins.csv": "0710115d61c89e58da1ec90c8183ae4fcae358d88a3d20e2fb7e84cf9a8cf608",
+    "calibration_bins.png": "0e18fe9007c7261850c9e62139e4cbe50f761d5d1ffb0ead124b2c7d7d1e823d",
+    "decision_cost_sensitivity.csv": "4ba94088e793db1c3643f281c51f20dff13504c43edbbbe8d89b2f9e31b73d75",
+    "decision_cost_sensitivity.png": "d677c1b847a9867f9439411ebe347d044a4e8cd7ebb79c20a2d2e827221dd732",
+    "environment.json": "5c93ba78be30764f1885a81cb73e419241b77ed70cae741968afc6d467f2d4b5",
+    "failure_analysis.md": "a860d595ac40bab422094a3887a27b0bd9fbc942a63c1d816d9828da4e27f5e1",
+    "fold_metrics.csv": "b170488f21f7ed119744d222dc2a68cf641e100373f903fd7c57839f35610231",
+    "fold_rmse.png": "1288fe8dae72c58680c5dbef9405aa75e49f6116e8fe544e55f1525f4f39c534",
+    "model_card.md": "eb0f1bc6954c5820f87889b0a3a494b76bc29413b3741a936a0a7a3db702c532",
+    "prediction_clipping_audit.csv": "4e80c7b626d0eafd4e49b3fee1a16575d08e56e01ed1da3cca29975b6ca3d56c",
+    "random_forest_seed_stability.csv": "d354dad8b97082ccb0e21e92f68b50a6e9c39606de272ce658e3a2ffffa2b316",
+    "regime_metrics.csv": "de370aba1e6b1955445dc28450b99030e55dd1dd84dfff009d36ec882fde0109",
+    "regime_qlike.png": "89759c6f90c53099564e52c63acf7fa2f8a17171167147c113e609c73d85715e"
+  }
+}

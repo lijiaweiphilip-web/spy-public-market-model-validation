@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+title: SPY Public-Market Model Validation
+authors:
+  - family-names: Li
+    given-names: Jiawei
+version: 0.1.0
+date-released: 2026-08-25
+message: "If this research code is useful, please cite the repository release."
+license: MIT

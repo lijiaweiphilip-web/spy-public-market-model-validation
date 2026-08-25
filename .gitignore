@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+runs/*
+!runs/.gitkeep
+private_local_evidence/
+private_evidence/
+*.jsonl
+*.parquet
+*.pkl
+.env
