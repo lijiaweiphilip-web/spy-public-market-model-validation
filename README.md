@@ -29,7 +29,9 @@ The table below is generated from `results/reference_run/aggregate_metrics.csv` 
 <!-- END CANONICAL_RESULTS -->
 
 <!-- BEGIN CANONICAL_INTERPRETATION -->
-The interpretation and fold-bootstrap intervals below are refreshed automatically from the same canonical run.
+Fixed EWMA has the strongest aggregate RMSE/QLIKE in this reference run; Random Forest has the strongest rank correlation (0.631) but does not dominate the finance baseline, and Ridge exhibits stress-period instability.
+
+Fold-bootstrap differences versus the historical mean for EWMA were RMSE [-0.000309, -0.000027] and QLIKE [-2.146544, -0.107434] (lower is better; descriptive intervals for this reference run).
 <!-- END CANONICAL_INTERPRETATION -->
 
 The canonical table is refreshed only from a single final Python 3.12 run; it is not assembled from mixed historical artifacts.

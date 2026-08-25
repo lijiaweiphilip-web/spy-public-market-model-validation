@@ -1,6 +1,6 @@
 # Failure and limitation analysis
 
-This file is generated from the reference run. It is intentionally candid: model validation is stronger when unstable or negative results remain visible.
+This file is generated from the reference-run. It is intentionally candid: model validation is stronger when unstable or negative results remain visible.
 Calibration factors for Ridge and Random Forest are estimated from an inner temporal block inside each outer training set; the outer test block is never used. This is stricter than in-sample calibration but remains a small-sample diagnostic, not a guarantee of calibrated probabilities or variance forecasts.
 
 - **ewma_baseline** outperformed the historical-mean baseline on aggregate RMSE by 0.000281333; QLIKE difference was -0.806744.

@@ -1,10 +1,10 @@
 # Reference-run report
 
-- Data: SPY daily adjusted close, 2016-11-18 to 2026-08-17
+- Data: SPY daily adjusted-close data, 2016-11-18 to 2026-08-17
 - Target: next 5-trading-day realised variance proxy
 - Validation: 27 purged expanding walk-forward folds
 - Best aggregate QLIKE in this run: **ewma_baseline** (0.490342)
-- Exact environment: [`environment.json`](environment.json), git commit `2711eb2d7b496ac44f7ed820d02b35433b7c9d2b`
+- Exact environment: [`environment.json`](environment.json), git commit `69dbbab8d6ea5d461c799416c0017e8960ca0afc`
 - No alpha, return, Sharpe ratio, profitability or production claim is made.
 
 ## Aggregate metrics
