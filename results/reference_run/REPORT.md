@@ -4,7 +4,7 @@
 - Target: next 5-trading-day realised variance proxy
 - Validation: 27 purged expanding walk-forward folds
 - Best aggregate QLIKE in this run: **ewma_baseline** (0.490342)
-- Exact environment: [`environment.json`](environment.json), git commit `694b4736969a01abcaba9a688092c70caeb414de`
+- Exact environment: [`environment.json`](environment.json), git commit `2711eb2d7b496ac44f7ed820d02b35433b7c9d2b`
 - No alpha, return, Sharpe ratio, profitability or production claim is made.
 
 ## Aggregate metrics

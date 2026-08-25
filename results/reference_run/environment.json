@@ -7,7 +7,7 @@
   "matplotlib": "3.11.1",
   "tabulate": "0.10.0",
   "package_version": "0.1.0",
-  "git_commit": "694b4736969a01abcaba9a688092c70caeb414de",
+  "git_commit": "2711eb2d7b496ac44f7ed820d02b35433b7c9d2b",
   "config_sha256": "50714ae7f90ad53f8d025dfa4855f88c91d03a299598d320df123d231fe22905",
   "source_sha256": "eae913fd646ed32c3904d9b6e61beb2216c103bacaf16a0a36eab7528970710a",
   "calibration_method": "inner_temporal_block",
