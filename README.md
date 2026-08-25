@@ -1,62 +1,66 @@
 # SPY Public-Market Model Validation
 
-Evidence-first validation of simple volatility-proxy models on SPY daily adjusted-close data.
+[![CI](https://github.com/lijiaweiphilip-web/spy-public-market-model-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/lijiaweiphilip-web/spy-public-market-model-validation/actions/workflows/ci.yml) [![Python 3.10-3.12](https://img.shields.io/badge/python-3.10--3.12-blue.svg)](https://www.python.org/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## What this repository demonstrates
+## Research question
 
-- adjusted-close data parsing with a hashed source manifest;
-- a five-day forward realised-variance target;
-- 27 purged expanding walk-forward folds in the reference configuration;
-- historical mean, Ridge and Random Forest benchmarks;
-- point-level out-of-fold predictions and fold metrics;
-- calibration bins, prior-volatility regime slices and bootstrap fold comparisons;
-- Ridge coefficient, random-forest feature and seed-stability diagnostics;
-- an illustrative volatility-targeting turnover and transaction-cost sensitivity layer;
-- explicit failure analysis and reproducibility hashes.
+Can simple historical, EWMA and machine-learning models forecast a five-trading-day realised-variance proxy from SPY daily **adjusted-close** data under a strict temporal protocol? The reference design uses **27 purged expanding walk-forward folds**, fixed hyperparameters, **no random split**, and **no test-set tuning**. Negative Ridge/EWMA results and stress-period instability remain visible.
 
-This is a **model-validation research project**, not a trading strategy. It makes no alpha, return, P&L, Sharpe-ratio, portfolio-performance or investment-advice claim.
+This is a model-validation research project, not a trading strategy. It makes no alpha, return, Sharpe, P&L, portfolio-performance, live-trading or investment-advice claim.
 
-## Install
+## Models and evidence
+
+- Historical mean and a fixed RiskMetrics-style **EWMA lambda=0.94** baseline.
+- Ridge and Random Forest on a log target with an inner temporal calibration block inside each outer training set.
+- Five-day target, purged labels, train-derived regimes, QLIKE/RMSE, calibration bins, stability, failure analysis and illustrative decision-cost sensitivity.
+- Every canonical artifact is hashed after reports, environment and figures are written.
+
+## Canonical reference results
+
+The table below is generated from `results/reference_run/aggregate_metrics.csv` by the canonical private audit run. Lower RMSE/QLIKE is better; `calibration_ratio` is the mean prediction divided by mean actual and is descriptive, not a calibration guarantee.
+
+| Model | RMSE | QLIKE | Calibration ratio |
+|---|---:|---:|---:|
+| historical mean | 0.002404 | 1.297086 | 0.865878 |
+| EWMA (lambda=0.94) | pending canonical run | pending | pending |
+| Ridge | 0.002380 | 20.512317 | 0.744124 |
+| Random Forest | 0.002231 | 0.555181 | 0.749626 |
+
+The canonical table is refreshed only from a single final Python 3.12 run; it is not assembled from mixed historical artifacts.
+
+## Reproducibility tiers
+
+1. **Tier 1 - public synthetic/CI:** synthetic adjusted-close data runs the complete feature, fold, model, report, manifest and tamper-validation path.
+2. **Tier 2 - live vendor rerun:** Yahoo adjusted-close retrieval is subject to vendor revisions and endpoint availability.
+3. **Tier 3 - canonical audit rerun:** the exact raw vendor snapshot is retained privately by SHA-256 and rerun with the locked Python 3.12 environment; raw vendor bytes and point-level predictions are not redistributed by default.
+
+## Install and run
 
 ```bash
 python -m venv .venv
 # Windows: .venv\Scripts\activate
 # macOS/Linux: source .venv/bin/activate
 python -m pip install -e .[dev]
-pytest
+pytest --cov=spy_validation --cov-report=term-missing --cov-fail-under=80
 ```
 
-## Run with a local Yahoo chart snapshot
+With a local Yahoo chart JSON:
 
 ```bash
-spy-validate run \
-  --config configs/default.json \
-  --input-json /path/to/spy_yahoo_chart.json \
-  --output-dir runs/reference_run
-spy-validate validate --run-dir runs/reference_run
+spy-validate run --config configs/default.json --input-json /path/to/spy_yahoo_chart.json --output-dir runs/reference_run
+spy-validate validate --run-dir runs/reference_run --source-path /path/to/spy_yahoo_chart.json
 ```
 
-## Run with a CSV
+The CSV alternative requires `date` and `adjusted_close` columns. Raw-close-only Yahoo payloads are rejected.
 
-The CSV must contain `date` and `adjusted_close` columns.
-
-```bash
-spy-validate run --input-csv /path/to/spy_adjusted_close.csv
-```
-
-## Fetch at runtime
-
-Omit `--input-json` and `--input-csv` to fetch a new Yahoo chart response. The endpoint is convenient rather than contractual, so the exact raw response is hashed and local snapshots are preferred for deterministic audit reruns.
-
-## Reference run
-
-The 2026-08-25 reference run used 27 purged expanding walk-forward folds and 1,620 out-of-fold observations per model. Random Forest had the best aggregate QLIKE (0.555) and RMSE (0.002231); its fold-bootstrap RMSE difference versus the historical-mean baseline was negative in the 95% interval. Ridge improved RMSE on average but showed severe QLIKE instability in stress periods, which is retained in the failure report rather than hidden.
-
-The committed reference summary contains derived metrics, figures, documentation and a manifest. Raw vendor data and private point-level evidence are excluded from the public repository by default. Re-run the code to regenerate the complete evidence bundle.
-
-See:
+## Read next
 
 - [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md)
+- [`docs/CALIBRATION_AUDIT.md`](docs/CALIBRATION_AUDIT.md)
+- [`docs/DATA_AND_REPRODUCIBILITY.md`](docs/DATA_AND_REPRODUCIBILITY.md)
 - [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md)
 - [`docs/RESUME_EVIDENCE.md`](docs/RESUME_EVIDENCE.md)
 - [`docs/GITHUB_PUBLISH_CHECKLIST.md`](docs/GITHUB_PUBLISH_CHECKLIST.md)
+- [`results/reference_run/REPORT.md`](results/reference_run/REPORT.md)
+
+![Canonical validation overview](docs/assets/overview.png)

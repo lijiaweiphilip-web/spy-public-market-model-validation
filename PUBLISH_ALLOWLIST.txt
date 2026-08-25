@@ -1,6 +1,7 @@
 .github/
 configs/
 docs/
+requirements/
 results/reference_run/
 src/
 tests/
