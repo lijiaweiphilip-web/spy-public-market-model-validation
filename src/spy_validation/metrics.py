@@ -4,12 +4,19 @@ import numpy as np
 import pandas as pd
 
 
+def qlike_loss(actual: np.ndarray, prediction: np.ndarray) -> np.ndarray:
+    """QLIKE = actual/prediction - log(actual/prediction) - 1."""
+    actual = np.maximum(np.asarray(actual, dtype=float), 1e-12)
+    prediction = np.maximum(np.asarray(prediction, dtype=float), 1e-12)
+    ratio = actual / prediction
+    return ratio - np.log(ratio) - 1.0
+
+
 def regression_metrics(actual: np.ndarray, prediction: np.ndarray) -> dict[str, float]:
     actual = np.maximum(np.asarray(actual, dtype=float), 1e-12)
     prediction = np.maximum(np.asarray(prediction, dtype=float), 1e-12)
     error = actual - prediction
-    ratio = actual / prediction
-    qlike = ratio - np.log(ratio) - 1.0
+    qlike = qlike_loss(actual, prediction)
     rank_actual = pd.Series(actual).rank(method="average").to_numpy(dtype=float)
     rank_prediction = pd.Series(prediction).rank(method="average").to_numpy(dtype=float)
     if np.ptp(rank_actual) <= 1e-15 or np.ptp(rank_prediction) <= 1e-15:

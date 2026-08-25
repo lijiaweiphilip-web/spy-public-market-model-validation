@@ -21,5 +21,8 @@
   "target_annualised_volatility": 0.12,
   "max_exposure": 1.0,
   "transaction_cost_bps": [1, 5, 10],
+  "ewma_lambda": 0.94,
+  "calibration_method": "inner_temporal_block",
+  "calibration_block_rows": 120,
   "output_dir": "runs/reference_run"
 }

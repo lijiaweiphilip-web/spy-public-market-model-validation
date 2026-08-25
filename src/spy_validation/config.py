@@ -30,6 +30,9 @@ class RunConfig:
     target_annualised_volatility: float
     max_exposure: float
     transaction_cost_bps: tuple[int, ...]
+    ewma_lambda: float
+    calibration_method: str
+    calibration_block_rows: int
     output_dir: str
 
     @classmethod
@@ -57,6 +60,9 @@ class RunConfig:
             target_annualised_volatility=float(payload["target_annualised_volatility"]),
             max_exposure=float(payload["max_exposure"]),
             transaction_cost_bps=tuple(int(v) for v in payload["transaction_cost_bps"]),
+            ewma_lambda=float(payload.get("ewma_lambda", 0.94)),
+            calibration_method=str(payload.get("calibration_method", "inner_temporal_block")),
+            calibration_block_rows=int(payload.get("calibration_block_rows", 120)),
             output_dir=str(payload["output_dir"]),
         )
 
@@ -80,6 +86,12 @@ class RunConfig:
             raise ValueError("upper_clip_quantile must be between 0.9 and 1")
         if self.max_exposure <= 0:
             raise ValueError("max_exposure must be positive")
+        if not 0.0 < self.ewma_lambda < 1.0:
+            raise ValueError("ewma_lambda must be between 0 and 1")
+        if self.calibration_method not in {"inner_temporal_block", "in_sample"}:
+            raise ValueError("calibration_method must be inner_temporal_block or in_sample")
+        if self.calibration_block_rows < self.target_horizon_days + 1:
+            raise ValueError("calibration_block_rows must exceed the target horizon")
 
     def to_dict(self) -> dict[str, Any]:
         data = self.__dict__.copy()

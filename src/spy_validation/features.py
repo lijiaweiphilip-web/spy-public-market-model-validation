@@ -21,6 +21,28 @@ FEATURE_COLUMNS = [
     "trend_20",
     "trend_60",
 ]
+EWMA_FEATURE_COLUMN = "ewma_variance_0_94"
+
+
+def ewma_variance(values: pd.Series | np.ndarray, decay: float = 0.94) -> np.ndarray:
+    """Return a causal EWMA of squared log returns.
+
+    The value at t uses only returns observed on or before t. The first valid
+    return seeds the recursion; missing values remain missing until a valid
+    return is observed.
+    """
+    if not 0.0 < decay < 1.0:
+        raise ValueError("decay must be between 0 and 1")
+    arr = np.asarray(values, dtype=float)
+    result = np.full(arr.shape, np.nan, dtype=float)
+    previous = np.nan
+    for index, value in enumerate(arr):
+        if not np.isfinite(value):
+            continue
+        squared = float(value) ** 2
+        previous = squared if not np.isfinite(previous) else decay * previous + (1.0 - decay) * squared
+        result[index] = previous
+    return result
 
 
 def build_feature_frame(prices: pd.DataFrame, horizon: int) -> pd.DataFrame:
@@ -50,6 +72,7 @@ def build_feature_frame(prices: pd.DataFrame, horizon: int) -> pd.DataFrame:
     frame["drawdown_20"] = frame["adjusted_close"] / frame["adjusted_close"].rolling(20).max() - 1
     frame["trend_20"] = frame["adjusted_close"] / frame["adjusted_close"].rolling(20).mean() - 1
     frame["trend_60"] = frame["adjusted_close"] / frame["adjusted_close"].rolling(60).mean() - 1
+    frame[EWMA_FEATURE_COLUMN] = ewma_variance(frame["log_return"], decay=0.94)
 
     future_terms = [squared.shift(-step) for step in range(1, horizon + 1)]
     frame["target_realised_variance"] = sum(future_terms)
@@ -64,6 +87,7 @@ def build_feature_frame(prices: pd.DataFrame, horizon: int) -> pd.DataFrame:
         "target_start_timestamp",
         "target_end_timestamp",
         "target_realised_variance",
+        EWMA_FEATURE_COLUMN,
         *FEATURE_COLUMNS,
     ]
     result = frame[keep].dropna().reset_index(drop=True)
