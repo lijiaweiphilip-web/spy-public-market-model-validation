@@ -11,7 +11,7 @@
   "run_label": "Reference-run",
   "data_description": "SPY daily adjusted-close data",
   "code_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
-  "artifact_repository_commit": "PENDING_ARTIFACT_COMMIT",
+  "artifact_repository_commit": "9b732b1c448d436e59808b816dfec2b2567996e0",
   "git_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
   "config_sha256": "50714ae7f90ad53f8d025dfa4855f88c91d03a299598d320df123d231fe22905",
   "source_sha256": "eae913fd646ed32c3904d9b6e61beb2216c103bacaf16a0a36eab7528970710a",
