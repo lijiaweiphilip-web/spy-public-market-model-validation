@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from .config import RunConfig
-from .data import fetch_yahoo_chart, load_adjusted_close_csv
+from .data import fetch_yahoo_chart, load_adjusted_close_csv, load_yahoo_chart
 from .evaluation import add_decision_cost_diagnostics, run_walk_forward
 from .features import build_feature_frame
 from .reporting import write_outputs

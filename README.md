@@ -4,7 +4,7 @@
 
 ## Research question
 
-Can simple historical, EWMA and machine-learning models forecast a five-trading-day realised-variance proxy from SPY daily **adjusted-close** data under a strict temporal protocol? The reference design uses **27 purged expanding walk-forward folds**, fixed hyperparameters, **no random split**, and **no test-set tuning**. Negative Ridge/EWMA results and stress-period instability remain visible.
+Can simple historical, EWMA and machine-learning models forecast a five-trading-day realised-variance proxy from SPY daily **adjusted-close** data under a strict temporal protocol? The reference design uses **27 purged expanding walk-forward folds**, fixed hyperparameters, **no random split**, and **no test-set tuning**. Negative Ridge results and stress-period instability remain visible.
 
 This is a model-validation research project, not a trading strategy. It makes no alpha, return, Sharpe, P&L, portfolio-performance, live-trading or investment-advice claim.
 
@@ -19,12 +19,14 @@ This is a model-validation research project, not a trading strategy. It makes no
 
 The table below is generated from `results/reference_run/aggregate_metrics.csv` by the canonical private audit run. Lower RMSE/QLIKE is better; `calibration_ratio` is the mean prediction divided by mean actual and is descriptive, not a calibration guarantee.
 
+<!-- BEGIN CANONICAL_RESULTS -->
 | Model | RMSE | QLIKE | Calibration ratio |
 |---|---:|---:|---:|
 | historical mean | 0.002404 | 1.297086 | 0.865878 |
-| EWMA (lambda=0.94) | pending canonical run | pending | pending |
-| Ridge | 0.002380 | 20.512317 | 0.744124 |
-| Random Forest | 0.002231 | 0.555181 | 0.749626 |
+| EWMA (lambda=0.94) | 0.002123 | 0.490342 | 1.000233 |
+| Ridge | 0.002442 | 19.969421 | 0.894873 |
+| Random Forest | 0.002294 | 0.577410 | 0.794853 |
+<!-- END CANONICAL_RESULTS -->
 
 The canonical table is refreshed only from a single final Python 3.12 run; it is not assembled from mixed historical artifacts.
 

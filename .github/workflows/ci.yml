@@ -25,6 +25,6 @@ jobs:
       - name: Tests and coverage
         run: pytest --cov=spy_validation --cov-report=term-missing --cov-fail-under=80
       - name: Compile
-        run: python -m compileall -q src tests
+        run: python -m compileall -q src tests scripts
       - name: Static checks
-        run: ruff check src tests
+        run: ruff check src tests scripts

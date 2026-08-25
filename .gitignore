@@ -1,4 +1,5 @@
 .venv/
+.venv_v4_5_canonical/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
@@ -12,4 +13,5 @@ private_evidence/
 *.pkl
 .coverage
 coverage.xml
+*.egg-info/
 .env

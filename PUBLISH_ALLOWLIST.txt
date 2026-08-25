@@ -2,6 +2,7 @@
 configs/
 docs/
 requirements/
+scripts/
 results/reference_run/
 src/
 tests/
