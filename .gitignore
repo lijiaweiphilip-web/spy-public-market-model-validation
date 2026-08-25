@@ -10,4 +10,6 @@ private_evidence/
 *.jsonl
 *.parquet
 *.pkl
+.coverage
+coverage.xml
 .env

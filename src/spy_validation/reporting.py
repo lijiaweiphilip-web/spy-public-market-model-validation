@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata
 import json
 import platform
+import shutil
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,6 +28,28 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _package_version() -> str:
+    try:
+        return importlib.metadata.version("spy-public-market-model-validation")
+    except importlib.metadata.PackageNotFoundError:
+        return "local-source"
+
+
+def _git_commit(config_path: Path) -> str:
+    repo = config_path.resolve().parent.parent
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return "UNKNOWN"
+    return result.stdout.strip()
 
 
 def _write_plot_fold_rmse(fold_metrics: pd.DataFrame, path: Path) -> None:
@@ -103,6 +128,7 @@ def _failure_analysis(
         "# Failure and limitation analysis",
         "",
         "This file is generated from the reference run. It is intentionally candid: model validation is stronger when unstable or negative results remain visible.",
+        "Calibration factors for Ridge and Random Forest are estimated from an inner temporal block inside each outer training set; the outer test block is never used. This is stricter than in-sample calibration but remains a small-sample diagnostic, not a guarantee of calibrated probabilities or variance forecasts.",
         "",
     ]
     for _, row in aggregate.iterrows():
@@ -143,6 +169,7 @@ def _failure_analysis(
             "",
             "- One preselected ETF only; no cross-asset or cross-market generalisation claim.",
             "- Five-day realised variance is a noisy proxy, not latent volatility and not a causal outcome.",
+            "- The EWMA baseline uses a fixed RiskMetrics-style lambda=0.94 and maps a daily conditional-variance estimate to five days by multiplying by the horizon; lambda is not selected on the test set.",
             "- Adjusted-close history comes from a vendor endpoint that can revise data or become unavailable.",
             "- Hyperparameters are fixed before test evaluation; no claim is made that they are optimal.",
             "- The illustrative exposure and transaction-cost layer measures decision turnover only. It does not report returns, alpha, Sharpe ratio, P&L or deployable strategy performance.",
@@ -162,6 +189,12 @@ def write_outputs(
     cost_summary: pd.DataFrame,
     command: str,
 ) -> dict:
+    """Write a complete run before hashing it.
+
+    The manifest is deliberately the final file written. This prevents the
+    earlier V4.4 failure mode where REPORT/environment were created after their
+    hashes had already been recorded.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
     predictions = outputs["predictions"]
     fold_metrics = outputs["fold_metrics"]
@@ -196,6 +229,7 @@ def write_outputs(
     for filename, frame in dataframes.items():
         frame.to_csv(output_dir / filename, index=False)
 
+    shutil.copy2(config_path, output_dir / "config_used.json")
     _write_plot_fold_rmse(fold_metrics, output_dir / "fold_rmse.png")
     _write_plot_calibration(calibration, output_dir / "calibration_bins.png")
     _write_plot_regime(outputs["regime_metrics"], output_dir / "regime_qlike.png")
@@ -210,49 +244,53 @@ def write_outputs(
     )
     (output_dir / "failure_analysis.md").write_text(failure_text, encoding="utf-8")
 
-    model_card = f"""# Model card\n\n## Intended research question\nCan simple historical and machine-learning models produce stable, calibrated five-day realised-variance forecasts under purged expanding walk-forward validation on SPY daily adjusted-close data?\n\n## Models\n- Historical mean baseline\n- Ridge regression on a log target with training-only calibration\n- Random forest on a log target with training-only calibration\n\n## Validation\n- {len(fold_metrics['fold'].unique())} expanding walk-forward folds\n- {cfg.test_rows_per_fold} test rows per fold\n- {cfg.embargo_rows}-row purge/embargo to prevent overlapping training labels from entering each test period\n- Fixed hyperparameters; no test-set tuning\n\n## Intended use\nResearch-method demonstration, RA interview discussion, and reproducibility evidence.\n\n## Not intended for\nLive trading, investment recommendations, alpha claims, P&L claims, portfolio construction or production risk management.\n\n## Known limitations\nSee `failure_analysis.md`.\n"""
+    model_card = f"""# Model card
+
+## Intended research question
+Can simple historical, EWMA and machine-learning models produce stable forecasts of a five-day realised-variance proxy under purged expanding walk-forward validation on SPY daily adjusted-close data?
+
+## Models
+- Historical mean baseline
+- RiskMetrics-style EWMA baseline with fixed lambda={cfg.ewma_lambda:.2f}; a daily conditional-variance estimate is multiplied by the five-day horizon
+- Ridge regression on a log target with `{cfg.calibration_method}` calibration inside each outer training set
+- Random forest on a log target with `{cfg.calibration_method}` calibration inside each outer training set
+
+## Validation
+- {len(fold_metrics['fold'].unique())} expanding walk-forward folds
+- {cfg.test_rows_per_fold} test rows per fold
+- {cfg.embargo_rows}-row purge/embargo to prevent overlapping training labels from entering each test period
+- Fixed hyperparameters; no random split and no test-set tuning
+
+## Intended use
+Research-method demonstration, RA interview discussion, and reproducibility evidence.
+
+## Not intended for
+Live trading, investment recommendations, alpha claims, P&L claims, portfolio construction or production risk management.
+
+## Known limitations
+See `failure_analysis.md` and `docs/CALIBRATION_AUDIT.md`.
+"""
     (output_dir / "model_card.md").write_text(model_card, encoding="utf-8")
 
+    git_commit = _git_commit(config_path)
     environment = {
         "python": sys.version,
         "platform": platform.platform(),
         "numpy": np.__version__,
         "pandas": pd.__version__,
+        "scikit_learn": importlib.metadata.version("scikit-learn"),
+        "matplotlib": importlib.metadata.version("matplotlib"),
+        "tabulate": importlib.metadata.version("tabulate"),
+        "package_version": _package_version(),
+        "git_commit": git_commit,
+        "config_sha256": sha256(config_path),
+        "source_sha256": sha256(source_path),
+        "calibration_method": cfg.calibration_method,
+        "calibration_block_rows": cfg.calibration_block_rows,
+        "ewma_lambda": cfg.ewma_lambda,
     }
     (output_dir / "environment.json").write_text(
         json.dumps(environment, indent=2), encoding="utf-8"
-    )
-
-    artifact_hashes: dict[str, str] = {}
-    for path in sorted(output_dir.iterdir()):
-        if path.is_file() and path.name != "run_manifest.json":
-            artifact_hashes[path.name] = sha256(path)
-    manifest = {
-        "run_id": datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
-        "command": command,
-        "source_file": source_path.name,
-        "source_sha256": sha256(source_path),
-        "config_file": config_path.name,
-        "config_sha256": sha256(config_path),
-        "config": cfg.to_dict(),
-        "raw_price_rows": int(feature_frame.attrs.get("raw_price_rows", 0)),
-        "feature_rows": len(feature_frame),
-        "folds": int(fold_metrics["fold"].nunique()),
-        "models": sorted(predictions["model"].unique().tolist()),
-        "checks": {
-            "adjusted_close_only": "PASS",
-            "feature_before_target": "PASS",
-            "purged_training_labels": "PASS",
-            "expanding_temporal_split": "PASS",
-            "point_predictions_saved": "PASS",
-            "negative_results_retained": "PASS",
-        },
-        "artifact_sha256": artifact_hashes,
-    }
-    (output_dir / "run_manifest.json").write_text(
-        json.dumps(manifest, indent=2), encoding="utf-8"
     )
 
     ranked = aggregate.sort_values(["qlike", "rmse"])
@@ -264,6 +302,7 @@ def write_outputs(
         f"- Target: next {cfg.target_horizon_days}-trading-day realised variance proxy",
         f"- Validation: {fold_metrics['fold'].nunique()} purged expanding walk-forward folds",
         f"- Best aggregate QLIKE in this run: **{best['model']}** ({best['qlike']:.6f})",
+        f"- Exact environment: [`environment.json`](environment.json), git commit `{git_commit}`",
         "- No alpha, return, Sharpe ratio, profitability or production claim is made.",
         "",
         "## Aggregate metrics",
@@ -274,8 +313,49 @@ def write_outputs(
         "",
         bootstrap.to_markdown(index=False),
         "",
-        "See `failure_analysis.md`, `model_card.md`, the point-level predictions, regime tables, calibration bins, stability tables and hashed run manifest for the complete evidence trail.",
+        "The public reference bundle contains derived summaries only; raw vendor bytes, point-level predictions and exposure paths remain private evidence.",
+        "The final `run_manifest.json` hashes every artifact written above.",
         "",
     ]
     (output_dir / "REPORT.md").write_text("\n".join(report), encoding="utf-8")
+
+    artifact_hashes = {
+        path.name: sha256(path)
+        for path in sorted(output_dir.iterdir())
+        if path.is_file() and path.name != "run_manifest.json"
+    }
+    manifest = {
+        "manifest_version": 2,
+        "run_id": datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
+        "command": command,
+        "source_file": source_path.name,
+        "source_sha256": sha256(source_path),
+        "config_file": "config_used.json",
+        "config_sha256": sha256(config_path),
+        "config": cfg.to_dict(),
+        "environment_file": "environment.json",
+        "git_commit": git_commit,
+        "package_version": _package_version(),
+        "raw_price_rows": int(feature_frame.attrs.get("raw_price_rows", 0)),
+        "feature_rows": len(feature_frame),
+        "folds": int(fold_metrics["fold"].nunique()),
+        "test_rows_per_fold": cfg.test_rows_per_fold,
+        "models": sorted(predictions["model"].unique().tolist()),
+        "oof_rows_per_model": predictions.groupby("model").size().astype(int).to_dict(),
+        "checks": {
+            "adjusted_close_only": "PASS",
+            "feature_before_target": "PASS",
+            "purged_training_labels": "PASS",
+            "expanding_temporal_split": "PASS",
+            "point_predictions_saved": "PASS",
+            "negative_results_retained": "PASS",
+            "artifact_hashes_complete": "PASS",
+        },
+        "artifact_sha256": artifact_hashes,
+    }
+    (output_dir / "run_manifest.json").write_text(
+        json.dumps(manifest, indent=2), encoding="utf-8"
+    )
     return manifest
