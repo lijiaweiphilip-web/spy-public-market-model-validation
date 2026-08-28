@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +14,7 @@ from spy_validation.config import RunConfig
 from spy_validation.evaluation import add_decision_cost_diagnostics, run_walk_forward
 from spy_validation.features import build_feature_frame
 from spy_validation.reporting import write_outputs
+from spy_validation.validation import validate_reference_contract
 
 
 def small_config(tmp_path: Path) -> RunConfig:
@@ -63,23 +65,20 @@ def test_synthetic_end_to_end_pipeline_and_manifest(tmp_path):
     assert result["oof_rows_per_model"]["ewma_baseline"] == 540
 
 
-def test_manifest_hash_tampering_fails_validation(tmp_path):
-    source = synthetic_source(tmp_path)
-    cfg = small_config(tmp_path)
+def test_manifest_hash_tampering_fails_validation(tmp_path, cached_small_run):
+    cached_run, cached_source, cached_config = cached_small_run
+    run_dir = tmp_path / "run"
+    shutil.copytree(cached_run, run_dir)
+    source = tmp_path / "synthetic_adjusted_close.csv"
     config_path = tmp_path / "config.json"
-    config_path.write_text(json.dumps(cfg.to_dict()), encoding="utf-8")
-    prices = pd.read_csv(source)
-    frame = build_feature_frame(prices, cfg.target_horizon_days)
-    frame.attrs["raw_price_rows"] = len(prices)
-    outputs = run_walk_forward(frame, cfg)
-    exposure, costs = add_decision_cost_diagnostics(outputs["predictions"], cfg)
-    write_outputs(Path(cfg.output_dir), config_path, cfg, source, frame, outputs, exposure, costs, "tamper-test")
-    target = Path(cfg.output_dir) / "aggregate_metrics.csv"
+    shutil.copy2(cached_source, source)
+    shutil.copy2(cached_config, config_path)
+    target = run_dir / "aggregate_metrics.csv"
     original = target.read_bytes()
     try:
         target.write_bytes(original[:-1] + bytes([original[-1] ^ 1]))
         with pytest.raises(RuntimeError, match="hash mismatch"):
-            validate_run_dir(Path(cfg.output_dir), source, config_path)
+            validate_run_dir(run_dir, source, config_path)
     finally:
         target.write_bytes(original)
 
@@ -112,3 +111,69 @@ def test_public_reference_manifest_covers_math_claims_with_explicit_hash_mode():
     claims = json.loads(claims_path.read_text(encoding="utf-8"))
     assert claims["reference_manifest_version"] == manifest["manifest_version"]
     assert claims["canonical_experiment_code_commit"] == manifest["canonical_code_commit"]
+
+
+def test_public_reference_contract_validator_checks_schema_and_provenance():
+    reference_dir = Path(__file__).resolve().parents[1] / "results" / "reference_run"
+    result = validate_reference_contract(reference_dir)
+    assert result["status"] == "PASS"
+    assert result["manifest_version"] == 3
+    assert result["folds"] == 27
+
+
+def test_generic_validator_does_not_require_reference_fold_count(tmp_path):
+    """A one-fold toy run proves the validator is not SPY-reference hard-coded."""
+    run_dir = tmp_path / "toy_run"
+    run_dir.mkdir()
+    source = tmp_path / "source.csv"
+    source.write_text("date,adjusted_close\n2025-01-01,100\n", encoding="utf-8")
+    config = tmp_path / "config.json"
+    config.write_text('{"symbol":"TOY","target_horizon_days":1}\n', encoding="utf-8")
+    (run_dir / "predictions_oof.csv").write_text(
+        "fold,model,feature_date,target_start_date,target_end_date,actual,prediction,regime\n"
+        "0,toy_model,2025-01-01,2025-01-02,2025-01-02,1.0,1.0,mid\n",
+        encoding="utf-8",
+    )
+    (run_dir / "fold_metrics.csv").write_text(
+        "fold,model,train_target_end,test_start,mae,rmse,qlike,calibration_ratio,spearman\n"
+        "0,toy_model,2024-12-31,2025-01-02,0.0,0.0,0.0,1.0,1.0\n",
+        encoding="utf-8",
+    )
+    for name in (
+        "aggregate_metrics.csv",
+        "regime_metrics.csv",
+        "calibration_bins.csv",
+        "decision_cost_sensitivity.csv",
+        "failure_analysis.md",
+        "model_card.md",
+        "REPORT.md",
+        "environment.json",
+    ):
+        (run_dir / name).write_text("placeholder\n", encoding="utf-8")
+    import hashlib
+
+    hashes = {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in run_dir.iterdir()
+    }
+    manifest = {
+        "manifest_version": 2,
+        "folds": 1,
+        "models": ["toy_model"],
+        "oof_rows_per_model": {"toy_model": 1},
+        "test_rows_per_fold": 1,
+        "config_file": "config_used.json",
+        "config_sha256": hashlib.sha256(config.read_bytes()).hexdigest(),
+        "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "checks": {"artifact_hashes_complete": "PASS"},
+        "artifact_sha256": hashes,
+    }
+    (run_dir / "config_used.json").write_bytes(config.read_bytes())
+    manifest["artifact_sha256"]["config_used.json"] = hashlib.sha256(
+        (run_dir / "config_used.json").read_bytes()
+    ).hexdigest()
+    (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    result = validate_run_dir(run_dir, source, config)
+    assert result["status"] == "PASS"
+    assert result["folds"] == 1
+    assert result["models"] == ["toy_model"]

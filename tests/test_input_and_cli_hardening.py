@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -218,8 +219,19 @@ def test_cli_run_and_validate_integration(tmp_path: Path, monkeypatch: pytest.Mo
         ("duplicate_oof", "Duplicate fold/model/feature-date"),
     ],
 )
-def test_validate_run_dir_rejects_manifest_contract_failures(tmp_path: Path, mode: str, message: str):
-    run_dir, source, config_path = _build_small_run(tmp_path)
+def test_validate_run_dir_rejects_manifest_contract_failures(
+    tmp_path: Path,
+    mode: str,
+    message: str,
+    cached_small_run: tuple[Path, Path, Path],
+):
+    cached_run, cached_source, cached_config = cached_small_run
+    run_dir = tmp_path / "run"
+    shutil.copytree(cached_run, run_dir)
+    source = tmp_path / "synthetic_adjusted_close.csv"
+    config_path = tmp_path / "config.json"
+    shutil.copy2(cached_source, source)
+    shutil.copy2(cached_config, config_path)
 
     if mode == "missing_artifact":
         (run_dir / "aggregate_metrics.csv").unlink()

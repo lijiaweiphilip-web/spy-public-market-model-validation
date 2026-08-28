@@ -60,6 +60,8 @@ The public synthetic demo is a deterministic functionality/reproducibility check
 python -m pip install -e .[dev]
 spy-validate demo --output-dir runs/demo
 spy-validate validate --run-dir runs/demo --source-path runs/demo/synthetic_adjusted_close.csv
+# Strictly validate the checked-in canonical public reference bundle
+spy-validate validate-reference --reference-dir results/reference_run
 ```
 
 It generates price-only synthetic adjusted-close data, then derives targets, purged folds, model outputs, reports and hashes through the same pipeline used for the private audit. Synthetic metrics must not be combined with the canonical SPY table.
@@ -84,6 +86,8 @@ The CSV alternative requires `date` and `adjusted_close` columns. Raw-close-only
 - [`CHANGELOG.md`](CHANGELOG.md)
 - [`results/reference_run/REPORT.md`](results/reference_run/REPORT.md)
 - [`results/reference_run/PUBLIC_REFERENCE_MANIFEST.json`](results/reference_run/PUBLIC_REFERENCE_MANIFEST.json)
+- [`schemas/public_reference_manifest.schema.json`](schemas/public_reference_manifest.schema.json)
+- [`schemas/math_claims.schema.json`](schemas/math_claims.schema.json)
 - [`docs/REFERENCES.md`](docs/REFERENCES.md)
 
 ![Canonical validation overview](docs/assets/overview.png)

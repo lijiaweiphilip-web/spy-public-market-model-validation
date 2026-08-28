@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SPY public reference manifest",
+  "type": "object",
+  "required": [
+    "manifest_version",
+    "canonical_run_id",
+    "canonical_code_commit",
+    "source_sha256",
+    "config_sha256",
+    "folds",
+    "models",
+    "oof_rows_per_model",
+    "checks",
+    "public_artifact_sha256",
+    "public_artifact_hash_details",
+    "hash_contract"
+  ],
+  "properties": {
+    "manifest_version": {"type": "integer", "const": 3},
+    "canonical_run_id": {"type": "string", "minLength": 1},
+    "canonical_code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "folds": {"type": "integer", "minimum": 1},
+    "models": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+    "oof_rows_per_model": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "integer", "minimum": 1}
+    },
+    "checks": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string"}},
+    "public_artifact_sha256": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    },
+    "public_artifact_hash_details": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["hash_algorithm", "text_normalization", "raw_sha256", "normalized_sha256"],
+        "properties": {
+          "hash_algorithm": {"const": "sha256"},
+          "text_normalization": {"const": "git-lf-v1"},
+          "raw_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "normalized_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "hash_contract": {
+      "type": "object",
+      "required": ["artifact_sha256_mode", "text_normalization_mode"],
+      "properties": {
+        "artifact_sha256_mode": {"const": "raw_bytes"},
+        "text_normalization_mode": {"const": "git-lf-v1"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

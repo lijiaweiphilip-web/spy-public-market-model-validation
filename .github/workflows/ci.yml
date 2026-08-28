@@ -28,6 +28,8 @@ jobs:
         run: |
           spy-validate demo --output-dir runs/ci-demo
           spy-validate validate --run-dir runs/ci-demo --source-path runs/ci-demo/synthetic_adjusted_close.csv
+      - name: Validate public reference contract
+        run: spy-validate validate-reference --reference-dir results/reference_run
       - name: Compile
         run: python -m compileall -q src tests scripts
       - name: Static checks

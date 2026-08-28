@@ -56,3 +56,13 @@ def test_cli_demo_runs_complete_pipeline_and_validates(tmp_path: Path, monkeypat
     report = (output_dir / "REPORT.md").read_text(encoding="utf-8")
     assert "synthetic adjusted-close series" in report
     assert "SPY canonical" not in report
+
+
+def test_cli_validate_reference_command(tmp_path: Path, monkeypatch):
+    reference_dir = Path(__file__).resolve().parents[1] / "results" / "reference_run"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["spy-validate", "validate-reference", "--reference-dir", str(reference_dir)],
+    )
+    assert main() == 0
