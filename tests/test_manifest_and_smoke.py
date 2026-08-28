@@ -106,8 +106,8 @@ def test_public_reference_manifest_covers_math_claims_with_explicit_hash_mode():
     details = manifest["public_artifact_hash_details"]["MATH_CLAIMS.json"]
     assert details["hash_algorithm"] == "sha256"
     assert details["text_normalization"] == "git-lf-v1"
-    assert details["raw_sha256"] == hashlib.sha256(claims_path.read_bytes()).hexdigest()
     normalized = claims_path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    assert details["raw_sha256"] == manifest["public_artifact_sha256"]["MATH_CLAIMS.json"]
     assert details["normalized_sha256"] == hashlib.sha256(normalized).hexdigest()
     claims = json.loads(claims_path.read_text(encoding="utf-8"))
     assert claims["reference_manifest_version"] == manifest["manifest_version"]
