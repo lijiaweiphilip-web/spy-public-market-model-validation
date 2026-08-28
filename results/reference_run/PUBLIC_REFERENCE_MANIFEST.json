@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
   "canonical_run_id": "20260825T112527Z",
   "canonical_code_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
@@ -63,6 +63,7 @@
     "failure_analysis.md": "f6f77334e03ee20ac62db43c371cde4c98cf07d35272b798c6edb340c73d9f03",
     "fold_metrics.csv": "73b5d204ec80492e07aa9fed77a8f3e7da33fdb6908b728c481f9dea851d43cb",
     "fold_rmse.png": "35ce3ff515452424d51e79dd47827c5ce2fba4756b5e14884f26ee3a9cff82e9",
+    "MATH_CLAIMS.json": "be4a4c1b0216f76e831be43c1778faa4d5a962bd6b3958557d17a56e553c63ac",
     "model_card.md": "3347a39b5b4a1c61d4fb33da158735482f717e14a95ebcb1fdffcda9922e2c9b",
     "prediction_clipping_audit.csv": "729029fc4b7c5fac0ff14554626d5cd8229d7edf445342823a2a4bbea23d9db5",
     "random_forest_feature_importance.csv": "d5a292bf1acc2a2b4a55a9cda46c68b797502649e523b98ac6ce97146d3e9efe",
@@ -71,5 +72,108 @@
     "regime_qlike.png": "798503d7054462c6cc455329afbebd557d42869ee830821961c3c4402796d989",
     "REPORT.md": "c00aed24c98ea17caf80afcae9c304035031dcb5f4b1caf5fb9b9a2294a0b7b5",
     "ridge_coefficients.csv": "bded558ea7a2c2200029c9f6789b55c7cf6510bf24656dbd1f2185d29e51999e"
+  },
+  "public_artifact_hash_details": {
+    "aggregate_metrics.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "b8d96cc27f0e71ea1c129e3c2c44d9898d33b9380af55a47b8f19ef074378f56",
+      "normalized_sha256": "7ab9dd87b7bbddde89e7eee91d0b0a353cf73e9245006511775fd416788e6619"
+    },
+    "bootstrap_model_comparison.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "5df5fadfb8cb49454f40a1f0b4f06370edeb956d915f86b456d8f0914e5400d0",
+      "normalized_sha256": "0c82b833458dec29d5b21d9b9e73656a8d5d761ec38a5f20e30df34b8d8a5f62"
+    },
+    "calibration_bins.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "732278204364f49b4cc727f5dad9b481e022f2d0508068bb5979a93baab3b829",
+      "normalized_sha256": "47f350051e01c09228bebefe4bd0b187d59c3607d113fd7364593839f0a2a558"
+    },
+    "config_used.json": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "50714ae7f90ad53f8d025dfa4855f88c91d03a299598d320df123d231fe22905",
+      "normalized_sha256": "50714ae7f90ad53f8d025dfa4855f88c91d03a299598d320df123d231fe22905"
+    },
+    "decision_cost_sensitivity.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "068c3073f0acc3203d843e68f4cd9ba54386bc3891e374c93cd26ce19d61eb1d",
+      "normalized_sha256": "d71e5a4892a446ac160cbb46aa2866df80d4cf575fdb0e8e1c474978780ba4b4"
+    },
+    "environment.json": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "8d35b9dabd5c937d7f8553cd22fde0b1ce797d9ad0ab6aa9646c887263d94a8e",
+      "normalized_sha256": "86f1868400c5e869694b838d7f59b46150c37769fd4cf19e87988136183cf1f6"
+    },
+    "failure_analysis.md": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "f6f77334e03ee20ac62db43c371cde4c98cf07d35272b798c6edb340c73d9f03",
+      "normalized_sha256": "13c5ee38b278c2fdfe3d54177405b1d0cf3b7b5de74e002693e5b1e7b136ce2a"
+    },
+    "fold_metrics.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "73b5d204ec80492e07aa9fed77a8f3e7da33fdb6908b728c481f9dea851d43cb",
+      "normalized_sha256": "92eae4982a6c2aabf47b6954d70eb862e817a482397613d56f49e138aab2baff"
+    },
+    "MATH_CLAIMS.json": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "be4a4c1b0216f76e831be43c1778faa4d5a962bd6b3958557d17a56e553c63ac",
+      "normalized_sha256": "2d92713685ce879bfd2cc64a8e1947ae1e6d5783aa4368459481e3905bbd6e20"
+    },
+    "model_card.md": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "3347a39b5b4a1c61d4fb33da158735482f717e14a95ebcb1fdffcda9922e2c9b",
+      "normalized_sha256": "ece247c3e3b795270b8cdecee25daeb15e4702c3f90e3105c59903e721da94ef"
+    },
+    "prediction_clipping_audit.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "729029fc4b7c5fac0ff14554626d5cd8229d7edf445342823a2a4bbea23d9db5",
+      "normalized_sha256": "e620757752601ef62a80ac3fe254b5405ada67bd1d16a4e693c9565c6aa438c4"
+    },
+    "random_forest_feature_importance.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "d5a292bf1acc2a2b4a55a9cda46c68b797502649e523b98ac6ce97146d3e9efe",
+      "normalized_sha256": "504cc9f5a091f0c4073a97bacd017c705b221556fa29fdbc6a0d138799be117e"
+    },
+    "random_forest_seed_stability.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "21743eac3610db9e1b8a51d55f044ed4a98fb6b4ef2ab8942909df41fcd118eb",
+      "normalized_sha256": "b14749eb6816b41e6e6cf2e9e8d620464710574912f8e95006840a6464eeda41"
+    },
+    "regime_metrics.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "e44b2e0d2cdfdf73094d0f474f89b6582e08ad0e61fee3f64e385d0202b1033b",
+      "normalized_sha256": "76fa20d1441b1c816519eedee9707bbb6e06f79fe59f3b68e56fb7c65c077a63"
+    },
+    "REPORT.md": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "c00aed24c98ea17caf80afcae9c304035031dcb5f4b1caf5fb9b9a2294a0b7b5",
+      "normalized_sha256": "9978a77d875a46596d21dd508cf3466e1d6f64c11ee837a620027f04602e3a4e"
+    },
+    "ridge_coefficients.csv": {
+      "hash_algorithm": "sha256",
+      "text_normalization": "git-lf-v1",
+      "raw_sha256": "bded558ea7a2c2200029c9f6789b55c7cf6510bf24656dbd1f2185d29e51999e",
+      "normalized_sha256": "0d1d0305ae2833a4809e8c11415a4ddf89a88637384f79f38685638eea380cc6"
+    }
+  },
+  "hash_contract": {
+    "artifact_sha256_mode": "raw_bytes",
+    "text_normalization_mode": "git-lf-v1",
+    "text_normalization_note": "public_artifact_hash_details reports both raw UTF-8 bytes and Git-LF-normalized text hashes; the legacy public_artifact_sha256 map remains raw-byte compatible."
   }
 }

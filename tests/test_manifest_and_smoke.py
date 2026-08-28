@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -92,3 +93,22 @@ def test_public_allowlist_excludes_private_artifacts():
     assert "private_local_evidence" not in text
     assert "predictions_oof.csv" not in text
     assert "illustrative_exposure_path.csv" not in text
+
+
+def test_public_reference_manifest_covers_math_claims_with_explicit_hash_mode():
+    root = Path(__file__).resolve().parents[1]
+    reference_dir = root / "results" / "reference_run"
+    manifest = json.loads((reference_dir / "PUBLIC_REFERENCE_MANIFEST.json").read_text(encoding="utf-8"))
+    claims_path = reference_dir / "MATH_CLAIMS.json"
+    assert manifest["manifest_version"] >= 3
+    assert "MATH_CLAIMS.json" in manifest["public_artifact_sha256"]
+    assert manifest["hash_contract"]["artifact_sha256_mode"] == "raw_bytes"
+    details = manifest["public_artifact_hash_details"]["MATH_CLAIMS.json"]
+    assert details["hash_algorithm"] == "sha256"
+    assert details["text_normalization"] == "git-lf-v1"
+    assert details["raw_sha256"] == hashlib.sha256(claims_path.read_bytes()).hexdigest()
+    normalized = claims_path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    assert details["normalized_sha256"] == hashlib.sha256(normalized).hexdigest()
+    claims = json.loads(claims_path.read_text(encoding="utf-8"))
+    assert claims["reference_manifest_version"] == manifest["manifest_version"]
+    assert claims["canonical_experiment_code_commit"] == manifest["canonical_code_commit"]

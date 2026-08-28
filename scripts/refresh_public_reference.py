@@ -16,6 +16,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+try:
+    from .build_math_claims import build_math_claims
+except ImportError:  # pragma: no cover - direct script execution
+    from build_math_claims import build_math_claims
+
 PUBLIC_FILES = (
     "aggregate_metrics.csv",
     "bootstrap_model_comparison.csv",
@@ -50,6 +55,18 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def hash_details(path: Path) -> dict[str, str]:
+    """Return raw and explicit Git-LF-normalized SHA-256 values for text."""
+    raw = path.read_bytes()
+    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return {
+        "hash_algorithm": "sha256",
+        "text_normalization": "git-lf-v1",
+        "raw_sha256": hashlib.sha256(raw).hexdigest(),
+        "normalized_sha256": hashlib.sha256(normalized).hexdigest(),
+    }
 
 
 def _reset_directory(path: Path) -> None:
@@ -186,7 +203,7 @@ def refresh(canonical_run: Path, repo_root: Path) -> dict:
 
     environment = json.loads((output_dir / "environment.json").read_text(encoding="utf-8"))
     public_manifest = {
-        "manifest_version": 2,
+        "manifest_version": 3,
         "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
         "canonical_run_id": manifest["run_id"],
         "canonical_code_commit": manifest.get("code_commit", manifest.get("git_commit", "UNKNOWN")),
@@ -201,15 +218,28 @@ def refresh(canonical_run: Path, repo_root: Path) -> dict:
         "checks": manifest["checks"],
         "public_note": "Derived summaries only; raw vendor bytes, point predictions, exposure paths and private run manifest are excluded.",
         "public_artifact_sha256": {},
+        "public_artifact_hash_details": {},
+        "hash_contract": {
+            "artifact_sha256_mode": "raw_bytes",
+            "text_normalization_mode": "git-lf-v1",
+            "text_normalization_note": "public_artifact_hash_details reports both raw UTF-8 bytes and Git-LF-normalized text hashes; the legacy public_artifact_sha256 map remains raw-byte compatible.",
+        },
     }
     manifest_path = output_dir / "PUBLIC_REFERENCE_MANIFEST.json"
     manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8")
+    build_math_claims(repo_root, public_manifest)
     public_manifest["public_artifact_sha256"] = {
         path.name: sha256(path)
         for path in sorted(output_dir.iterdir())
         if path.is_file() and path.name != manifest_path.name
     }
-    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8")
+    public_manifest["public_artifact_hash_details"] = {
+        path.name: hash_details(path)
+        for path in sorted(output_dir.iterdir())
+        if path.is_file()
+        and path.name != manifest_path.name
+        and path.suffix.lower() in {".csv", ".json", ".md"}
+    }
     manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8")
     return public_manifest
 

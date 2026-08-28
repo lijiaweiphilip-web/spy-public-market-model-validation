@@ -10,7 +10,7 @@ This is a model-validation research project, not a trading strategy. It makes no
 
 ## Models and evidence
 
-- Historical mean and a fixed RiskMetrics-style **EWMA lambda=0.94** baseline.
+- Historical mean and a fixed, **non-anticipating EWMA lambda=0.94** baseline (a temporal availability rule, not a causal-inference claim).
 - Ridge and Random Forest on a log target with an inner temporal calibration block inside each outer training set.
 - Five-day target, purged labels, train-derived regimes, QLIKE/RMSE, calibration bins, stability, failure analysis and illustrative decision-cost sensitivity.
 - Every canonical artifact is hashed after reports, environment and figures are written.
@@ -75,6 +75,7 @@ The CSV alternative requires `date` and `adjusted_close` columns. Raw-close-only
 
 ## Read next
 
+- [`docs/MATHEMATICAL_CONTRACT.md`](docs/MATHEMATICAL_CONTRACT.md) — definitions, assumptions, purge rule and fold-level uncertainty unit.
 - [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md)
 - [`docs/CALIBRATION_AUDIT.md`](docs/CALIBRATION_AUDIT.md)
 - [`docs/DATA_AND_REPRODUCIBILITY.md`](docs/DATA_AND_REPRODUCIBILITY.md)

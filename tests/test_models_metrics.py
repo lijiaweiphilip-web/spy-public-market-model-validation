@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from spy_validation.config import RunConfig
-from spy_validation.metrics import qlike_loss, regression_metrics
+from spy_validation.metrics import bootstrap_fold_differences, qlike_loss, regression_metrics
 from spy_validation.models import make_models
 
 
@@ -90,3 +91,33 @@ def test_train_only_clipping_bounds_are_positive_and_recorded():
     assert np.all(prediction >= model.lower_bound)
     assert np.all(prediction <= model.upper_bound)
     assert model.calibration_rows == 120
+
+
+def _paired_fold_metrics() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "fold": [0, 0, 1, 1, 2, 2],
+            "model": ["mean_baseline", "ewma_baseline"] * 3,
+            "rmse": [1.0, 0.8, 1.2, 1.1, 0.9, 1.0],
+        }
+    )
+
+
+def test_bootstrap_resamples_complete_folds_deterministically_and_order_independently():
+    metrics = _paired_fold_metrics()
+    first = bootstrap_fold_differences(metrics, "rmse", "mean_baseline", repetitions=50, seed=7)
+    second = bootstrap_fold_differences(metrics.sample(frac=1.0, random_state=3), "rmse", "mean_baseline", repetitions=50, seed=7)
+    pd.testing.assert_frame_equal(first, second)
+    assert first.loc[0, "ci_lower_95"] <= first.loc[0, "ci_upper_95"]
+
+
+def test_bootstrap_rejects_missing_fold_model_pair():
+    metrics = _paired_fold_metrics().iloc[:-1]
+    with pytest.raises(ValueError, match="complete folds"):
+        bootstrap_fold_differences(metrics, "rmse", "mean_baseline", repetitions=10, seed=1)
+
+
+def test_bootstrap_rejects_duplicate_fold_model_pair():
+    metrics = pd.concat([_paired_fold_metrics(), _paired_fold_metrics().iloc[[0]]], ignore_index=True)
+    with pytest.raises(ValueError, match="Duplicate fold/model"):
+        bootstrap_fold_differences(metrics, "rmse", "mean_baseline", repetitions=10, seed=1)
