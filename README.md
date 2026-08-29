@@ -15,6 +15,11 @@ This is a model-validation research project, not a trading strategy. It makes no
 - Five-day target, purged labels, train-derived regimes, QLIKE/RMSE, calibration bins, stability, failure analysis and illustrative decision-cost sensitivity.
 - Every canonical artifact is hashed after reports, environment and figures are written.
 
+`spy-validate validate` is a generic validator for this repository's flat run
+schema: it recomputes the derived metric tables from point-level predictions.
+`validate-reference` is stricter and additionally checks the checked-in SPY
+contract (27 folds, four canonical models and 1,620 OOF rows per model).
+
 ## Canonical reference results
 
 The table below is generated from `results/reference_run/aggregate_metrics.csv` by the canonical private audit run. Lower RMSE/QLIKE is better; `calibration_ratio` is the mean prediction divided by mean actual and is descriptive, not a calibration guarantee.

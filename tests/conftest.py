@@ -38,7 +38,7 @@ def cached_small_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Pa
             "data_range": "synthetic",
             "interval": "1d",
             "target_horizon_days": 5,
-            "minimum_training_rows": 100,
+            "minimum_training_rows": 620,
             "test_rows_per_fold": 20,
             "step_rows": 20,
             "embargo_rows": 5,

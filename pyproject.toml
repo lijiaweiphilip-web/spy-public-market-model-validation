@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spy-public-market-model-validation"
-version = "0.1.0"
+version = "0.2.0"
 description = "Evidence-first walk-forward validation of simple volatility-proxy models on SPY daily data."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,10 +16,11 @@ dependencies = [
   "scikit-learn>=1.4",
   "matplotlib>=3.8",
   "tabulate>=0.9",
+  "jsonschema>=4.21,<5",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.5", "jsonschema>=4.21,<5"]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.5"]
 
 [project.scripts]
 spy-validate = "spy_validation.cli:main"

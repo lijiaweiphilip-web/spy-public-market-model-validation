@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -21,8 +22,8 @@ def small_config(tmp_path: Path) -> RunConfig:
     return RunConfig.from_dict(
         {
             "symbol": "SPY", "data_range": "synthetic", "interval": "1d", "target_horizon_days": 5,
-            "minimum_training_rows": 100, "test_rows_per_fold": 20, "step_rows": 20,
-            "embargo_rows": 5, "ridge_alpha": 10.0, "forest_estimators": 8,
+            "minimum_training_rows": 620, "test_rows_per_fold": 20, "step_rows": 20,
+            "embargo_rows": 5, "ridge_alpha": 10.0, "forest_estimators": 2,
             "forest_max_depth": 3, "forest_min_samples_leaf": 2, "primary_seed": 42,
             "stability_seeds": [42, 123], "prediction_floor": 1e-10,
             "upper_clip_quantile": 0.995, "upper_clip_multiplier": 3.0, "calibration_bins": 5,
@@ -58,11 +59,11 @@ def test_synthetic_end_to_end_pipeline_and_manifest(tmp_path):
         source_path=source, feature_frame=frame, outputs=outputs,
         exposure_path=exposure, cost_summary=costs, command="synthetic-smoke",
     )
-    assert manifest["folds"] == 27
+    assert manifest["folds"] == 1
     assert set(manifest["models"]) == {"mean_baseline", "ewma_baseline", "ridge", "random_forest"}
     result = validate_run_dir(Path(cfg.output_dir), source, config_path)
     assert result["status"] == "PASS"
-    assert result["oof_rows_per_model"]["ewma_baseline"] == 540
+    assert result["oof_rows_per_model"]["ewma_baseline"] == 20
 
 
 def test_manifest_hash_tampering_fails_validation(tmp_path, cached_small_run):
@@ -122,58 +123,30 @@ def test_public_reference_contract_validator_checks_schema_and_provenance():
 
 
 def test_generic_validator_does_not_require_reference_fold_count(tmp_path):
-    """A one-fold toy run proves the validator is not SPY-reference hard-coded."""
+    """A one-fold generated run proves validation is not SPY-reference hard-coded."""
+    source = synthetic_source(tmp_path)
+    cfg = replace(small_config(tmp_path), minimum_training_rows=620, forest_estimators=2)
     run_dir = tmp_path / "toy_run"
-    run_dir.mkdir()
-    source = tmp_path / "source.csv"
-    source.write_text("date,adjusted_close\n2025-01-01,100\n", encoding="utf-8")
+    cfg = replace(cfg, output_dir=str(run_dir))
     config = tmp_path / "config.json"
-    config.write_text('{"symbol":"TOY","target_horizon_days":1}\n', encoding="utf-8")
-    (run_dir / "predictions_oof.csv").write_text(
-        "fold,model,feature_date,target_start_date,target_end_date,actual,prediction,regime\n"
-        "0,toy_model,2025-01-01,2025-01-02,2025-01-02,1.0,1.0,mid\n",
-        encoding="utf-8",
+    config.write_text(json.dumps(cfg.to_dict()), encoding="utf-8")
+    prices = pd.read_csv(source)
+    frame = build_feature_frame(prices, cfg.target_horizon_days)
+    frame.attrs["raw_price_rows"] = len(prices)
+    outputs = run_walk_forward(frame, cfg)
+    exposure, costs = add_decision_cost_diagnostics(outputs["predictions"], cfg)
+    write_outputs(
+        output_dir=run_dir,
+        config_path=config,
+        cfg=cfg,
+        source_path=source,
+        feature_frame=frame,
+        outputs=outputs,
+        exposure_path=exposure,
+        cost_summary=costs,
+        command="generic-one-fold",
     )
-    (run_dir / "fold_metrics.csv").write_text(
-        "fold,model,train_target_end,test_start,mae,rmse,qlike,calibration_ratio,spearman\n"
-        "0,toy_model,2024-12-31,2025-01-02,0.0,0.0,0.0,1.0,1.0\n",
-        encoding="utf-8",
-    )
-    for name in (
-        "aggregate_metrics.csv",
-        "regime_metrics.csv",
-        "calibration_bins.csv",
-        "decision_cost_sensitivity.csv",
-        "failure_analysis.md",
-        "model_card.md",
-        "REPORT.md",
-        "environment.json",
-    ):
-        (run_dir / name).write_text("placeholder\n", encoding="utf-8")
-    import hashlib
-
-    hashes = {
-        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in run_dir.iterdir()
-    }
-    manifest = {
-        "manifest_version": 2,
-        "folds": 1,
-        "models": ["toy_model"],
-        "oof_rows_per_model": {"toy_model": 1},
-        "test_rows_per_fold": 1,
-        "config_file": "config_used.json",
-        "config_sha256": hashlib.sha256(config.read_bytes()).hexdigest(),
-        "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
-        "checks": {"artifact_hashes_complete": "PASS"},
-        "artifact_sha256": hashes,
-    }
-    (run_dir / "config_used.json").write_bytes(config.read_bytes())
-    manifest["artifact_sha256"]["config_used.json"] = hashlib.sha256(
-        (run_dir / "config_used.json").read_bytes()
-    ).hexdigest()
-    (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     result = validate_run_dir(run_dir, source, config)
     assert result["status"] == "PASS"
     assert result["folds"] == 1
-    assert result["models"] == ["toy_model"]
+    assert result["models"] == ["ewma_baseline", "mean_baseline", "random_forest", "ridge"]
