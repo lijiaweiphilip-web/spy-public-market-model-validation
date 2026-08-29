@@ -114,6 +114,14 @@ def test_public_reference_manifest_covers_math_claims_with_explicit_hash_mode():
     claims = json.loads(claims_path.read_text(encoding="utf-8"))
     assert claims["reference_manifest_version"] == manifest["manifest_version"]
     assert claims["canonical_experiment_code_commit"] == manifest["canonical_code_commit"]
+    assert manifest["manifest_schema_version"] == manifest["manifest_version"] == 3
+    assert manifest["canonical_experiment_code_commit"] == manifest["canonical_code_commit"]
+    assert manifest["reference_artifact_commit"] == manifest["artifact_repository_commit"]
+    assert manifest["canonical_experiment_package_version"] == "0.1.0"
+    assert manifest["validator_release_version"] == "0.2.0"
+    assert manifest["release_validator_commit"] is None
+    assert claims["math_claims_schema_version"] == manifest["math_claims_schema_version"] == "1.0"
+    assert claims["validator_release_version"] == manifest["validator_release_version"]
 
 
 def test_public_reference_contract_validator_checks_schema_and_provenance():

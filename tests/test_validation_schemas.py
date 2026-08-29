@@ -41,3 +41,27 @@ def test_reference_validator_requires_math_claims_in_artifact_map(tmp_path: Path
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(RuntimeError):
         validate_reference_contract(reference)
+
+
+def test_reference_validator_rejects_provenance_alias_drift(tmp_path: Path) -> None:
+    reference = tmp_path / "reference"
+    shutil.copytree(ROOT / "results" / "reference_run", reference)
+    manifest_path = reference / "PUBLIC_REFERENCE_MANIFEST.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["reference_artifact_commit"] = "0" * 40
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="artifact commit aliases disagree"):
+        validate_reference_contract(reference)
+
+
+def test_reference_validator_rejects_claim_version_drift(tmp_path: Path) -> None:
+    reference = tmp_path / "reference"
+    shutil.copytree(ROOT / "results" / "reference_run", reference)
+    claims_path = reference / "MATH_CLAIMS.json"
+    claims = json.loads(claims_path.read_text(encoding="utf-8"))
+    claims["validator_release_version"] = "0.1.0"
+    claims_path.write_text(json.dumps(claims), encoding="utf-8")
+    # The changed claims hash is intentionally not refreshed; hash validation
+    # fails closed before semantic provenance comparison.
+    with pytest.raises(RuntimeError, match="hash mismatch"):
+        validate_reference_contract(reference)

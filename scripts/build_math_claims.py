@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -20,6 +21,20 @@ except ImportError:  # pragma: no cover - direct script execution
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
     from spy_validation.provenance import artifact_hash_detail, raw_sha256
+
+
+def project_version(repo_root: Path) -> str:
+    """Read the validator release version from the source pyproject.
+
+    The canonical experiment package version remains in the checked-in
+    environment artifact; this value identifies the code that validates it.
+    """
+
+    text = (repo_root / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r"(?m)^version\s*=\s*['\"]([^'\"]+)['\"]", text)
+    if not match:
+        raise RuntimeError("project version is missing from pyproject.toml")
+    return match.group(1)
 
 
 def build_math_claims(repo_root: Path, manifest: dict | None = None) -> dict:
@@ -50,6 +65,7 @@ def build_math_claims(repo_root: Path, manifest: dict | None = None) -> dict:
     ]
     claims = {
         "schema_version": "1.0",
+        "math_claims_schema_version": "1.0",
         "task": "SPY five-day realised-variance proxy validation",
         "asset": str(config.get("symbol", "SPY")),
         "data_field": "adjusted_close",
@@ -78,8 +94,22 @@ def build_math_claims(repo_root: Path, manifest: dict | None = None) -> dict:
         ),
         "canonical_run_id": str(manifest["canonical_run_id"]),
         "canonical_experiment_code_commit": str(
-            manifest.get("canonical_code_commit", environment.get("code_commit", "UNKNOWN"))
+            manifest.get(
+                "canonical_experiment_code_commit",
+                manifest.get("canonical_code_commit", environment.get("code_commit", "UNKNOWN")),
+            )
         ),
+        "canonical_experiment_package_version": str(
+            manifest.get("canonical_experiment_package_version", environment.get("package_version", "UNKNOWN"))
+        ),
+        "validator_release_version": str(
+            manifest.get("validator_release_version", project_version(repo_root))
+        ),
+        "manifest_schema_version": int(manifest["manifest_schema_version"]),
+        "reference_artifact_commit": str(
+            manifest.get("reference_artifact_commit", manifest.get("artifact_repository_commit", "UNKNOWN"))
+        ),
+        "release_validator_commit": manifest.get("release_validator_commit"),
         "claims_generator_sha256": raw_sha256(generator_path),
         "mathematical_contract_sha256": artifact_hash_detail(contract_path)["source_raw_sha256"],
         "mathematical_contract_normalized_sha256": artifact_hash_detail(contract_path)["canonical_sha256"],
@@ -88,8 +118,12 @@ def build_math_claims(repo_root: Path, manifest: dict | None = None) -> dict:
         "generated_from_artifacts": generated_from,
         "provenance_note": (
             "canonical_experiment_code_commit identifies the locked reference run; "
+            "canonical_experiment_package_version identifies the environment that "
+            "generated its metrics; validator_release_version identifies this "
+            "validator package. release_validator_commit is null by design to avoid "
+            "a self-referential commit hash; Git history records the release commit. "
             "claims_generator_sha256 and mathematical_contract hashes identify the "
-            "derivation inputs. The working-tree commit is intentionally not embedded."
+            "derivation inputs."
         ),
         "non_claims": [
             "causal inference",

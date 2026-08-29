@@ -512,6 +512,12 @@ def validate_reference_contract(reference_dir: Path) -> dict[str, Any]:
         _schema_path("public_reference_manifest.schema.json"),
         "reference manifest",
     )
+    if manifest.get("manifest_schema_version") != manifest.get("manifest_version"):
+        raise RuntimeError("Reference manifest schema/version fields disagree")
+    if manifest.get("canonical_experiment_code_commit") != manifest.get("canonical_code_commit"):
+        raise RuntimeError("Reference canonical experiment commit aliases disagree")
+    if manifest.get("reference_artifact_commit") != manifest.get("artifact_repository_commit"):
+        raise RuntimeError("Reference artifact commit aliases disagree")
     hashes = manifest.get("public_artifact_sha256")
     details = manifest.get("public_artifact_hash_details")
     if not isinstance(hashes, dict) or not isinstance(details, dict):
@@ -577,6 +583,17 @@ def validate_reference_contract(reference_dir: Path) -> dict[str, Any]:
     _validate_json_schema(claims, _schema_path("math_claims.schema.json"), "math claims")
     if claims.get("reference_manifest_version") != 3:
         raise RuntimeError("MATH_CLAIMS reference manifest version mismatch")
+    if claims.get("math_claims_schema_version") != manifest.get("math_claims_schema_version"):
+        raise RuntimeError("MATH_CLAIMS schema version mismatch")
+    for field in (
+        "canonical_experiment_package_version",
+        "validator_release_version",
+        "manifest_schema_version",
+        "reference_artifact_commit",
+        "release_validator_commit",
+    ):
+        if claims.get(field) != manifest.get(field):
+            raise RuntimeError(f"MATH_CLAIMS {field} mismatch")
     if claims.get("canonical_run_id") != manifest.get("canonical_run_id"):
         raise RuntimeError("MATH_CLAIMS canonical run mismatch")
     if claims.get("canonical_experiment_code_commit") != manifest.get("canonical_code_commit"):
@@ -586,6 +603,10 @@ def validate_reference_contract(reference_dir: Path) -> dict[str, Any]:
         "validation_scope": "public_reference_summary_and_provenance_validation",
         "reference_dir": str(reference_dir),
         "manifest_version": 3,
+        "canonical_experiment_package_version": manifest["canonical_experiment_package_version"],
+        "validator_release_version": manifest["validator_release_version"],
+        "manifest_schema_version": manifest["manifest_schema_version"],
+        "math_claims_schema_version": manifest["math_claims_schema_version"],
         "folds": 27,
         "models": sorted(REFERENCE_MODELS),
         "artifact_hashes_verified": len(hashes),

@@ -2,6 +2,13 @@
   "manifest_version": 3,
   "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
   "canonical_run_id": "20260825T112527Z",
+  "canonical_experiment_code_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
+  "canonical_experiment_package_version": "0.1.0",
+  "validator_release_version": "0.2.0",
+  "manifest_schema_version": 3,
+  "math_claims_schema_version": "1.0",
+  "reference_artifact_commit": "9b732b1c448d436e59808b816dfec2b2567996e0",
+  "release_validator_commit": null,
   "canonical_code_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
   "canonical_git_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
   "artifact_repository_commit": "9b732b1c448d436e59808b816dfec2b2567996e0",
@@ -52,8 +59,6 @@
   },
   "public_note": "Derived summaries only; raw vendor bytes, point predictions, exposure paths and private run manifest are excluded.",
   "public_artifact_sha256": {
-    "MATH_CLAIMS.json": "7f4ec6f4882616afdb679b55ba1d0199a76f0a40f5e6397c702c85759dd6b566",
-    "REPORT.md": "3085cbac66034a194ab2880579df2a7643f7a887fc5c5d9215bb40bc81564e23",
     "aggregate_metrics.csv": "7ab9dd87b7bbddde89e7eee91d0b0a353cf73e9245006511775fd416788e6619",
     "bootstrap_model_comparison.csv": "0c82b833458dec29d5b21d9b9e73656a8d5d761ec38a5f20e30df34b8d8a5f62",
     "calibration_bins.csv": "47f350051e01c09228bebefe4bd0b187d59c3607d113fd7364593839f0a2a558",
@@ -65,12 +70,14 @@
     "failure_analysis.md": "13c5ee38b278c2fdfe3d54177405b1d0cf3b7b5de74e002693e5b1e7b136ce2a",
     "fold_metrics.csv": "92eae4982a6c2aabf47b6954d70eb862e817a482397613d56f49e138aab2baff",
     "fold_rmse.png": "35ce3ff515452424d51e79dd47827c5ce2fba4756b5e14884f26ee3a9cff82e9",
+    "MATH_CLAIMS.json": "c236abd9e8a03565ea9074b9942438a1e41c48a5c7e406e7de3fa3c9e0b5e3df",
     "model_card.md": "80052cd2cbcc551afe43528c7a2b62395c0fdc50870c5e32b329432506d74ac6",
     "prediction_clipping_audit.csv": "e620757752601ef62a80ac3fe254b5405ada67bd1d16a4e693c9565c6aa438c4",
     "random_forest_feature_importance.csv": "504cc9f5a091f0c4073a97bacd017c705b221556fa29fdbc6a0d138799be117e",
     "random_forest_seed_stability.csv": "b14749eb6816b41e6e6cf2e9e8d620464710574912f8e95006840a6464eeda41",
     "regime_metrics.csv": "76fa20d1441b1c816519eedee9707bbb6e06f79fe59f3b68e56fb7c65c077a63",
     "regime_qlike.png": "798503d7054462c6cc455329afbebd557d42869ee830821961c3c4402796d989",
+    "REPORT.md": "3085cbac66034a194ab2880579df2a7643f7a887fc5c5d9215bb40bc81564e23",
     "ridge_coefficients.csv": "0d1d0305ae2833a4809e8c11415a4ddf89a88637384f79f38685638eea380cc6"
   },
   "public_artifact_hash_details": {
@@ -152,15 +159,15 @@
       "content_type": "text",
       "hash_algorithm": "sha256",
       "hash_mode": "git-lf-v1",
-      "canonical_sha256": "7f4ec6f4882616afdb679b55ba1d0199a76f0a40f5e6397c702c85759dd6b566",
-      "source_raw_sha256": "7f4ec6f4882616afdb679b55ba1d0199a76f0a40f5e6397c702c85759dd6b566"
+      "canonical_sha256": "c236abd9e8a03565ea9074b9942438a1e41c48a5c7e406e7de3fa3c9e0b5e3df",
+      "source_raw_sha256": "c236abd9e8a03565ea9074b9942438a1e41c48a5c7e406e7de3fa3c9e0b5e3df"
     },
     "model_card.md": {
       "content_type": "text",
       "hash_algorithm": "sha256",
       "hash_mode": "git-lf-v1",
       "canonical_sha256": "80052cd2cbcc551afe43528c7a2b62395c0fdc50870c5e32b329432506d74ac6",
-      "source_raw_sha256": "67181b3851a8b5d1ed9675e874d368d5ac9f1876547b182c31fc8669e89c9d7d"
+      "source_raw_sha256": "d32d013027ea909fde9cb71859e12c79bd6802f2682c28721073644485513ea0"
     },
     "prediction_clipping_audit.csv": {
       "content_type": "text",
@@ -201,7 +208,7 @@
       "hash_algorithm": "sha256",
       "hash_mode": "git-lf-v1",
       "canonical_sha256": "3085cbac66034a194ab2880579df2a7643f7a887fc5c5d9215bb40bc81564e23",
-      "source_raw_sha256": "d53b0a2d7662b51329f8feb4b56bb12a3592a2fd45fa58cc1ea22fb974a64858"
+      "source_raw_sha256": "77b450fdc64fc5cbdc62a8fb22601520dd664da0f760c9766c5d6321ce75df1e"
     },
     "ridge_coefficients.csv": {
       "content_type": "text",

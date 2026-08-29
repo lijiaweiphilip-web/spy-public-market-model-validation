@@ -4,8 +4,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "manifest_version", "scope", "canonical_run_id", "canonical_code_commit",
-    "canonical_git_commit", "artifact_repository_commit", "source_sha256",
+    "manifest_version", "scope", "canonical_run_id", "canonical_experiment_code_commit",
+    "canonical_experiment_package_version", "validator_release_version", "manifest_schema_version",
+    "math_claims_schema_version", "reference_artifact_commit", "release_validator_commit",
+    "canonical_code_commit", "canonical_git_commit", "artifact_repository_commit", "source_sha256",
     "config_sha256", "environment", "folds", "models", "oof_rows_per_model",
     "checks", "public_note", "public_artifact_sha256",
     "public_artifact_hash_details", "hash_contract"
@@ -14,6 +16,18 @@
     "manifest_version": {"type": "integer", "const": 3},
     "scope": {"type": "string", "minLength": 1},
     "canonical_run_id": {"type": "string", "minLength": 1},
+    "canonical_experiment_code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "canonical_experiment_package_version": {"type": "string", "minLength": 1},
+    "validator_release_version": {"type": "string", "minLength": 1},
+    "manifest_schema_version": {"type": "integer", "const": 3},
+    "math_claims_schema_version": {"type": "string", "const": "1.0"},
+    "reference_artifact_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "release_validator_commit": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      ]
+    },
     "canonical_code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "canonical_git_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "artifact_repository_commit": {"type": "string", "minLength": 1},

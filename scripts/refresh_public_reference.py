@@ -24,9 +24,9 @@ except ImportError:  # pragma: no cover - direct script execution
     from spy_validation.provenance import artifact_hash_detail
 
 try:
-    from .build_math_claims import build_math_claims
+    from .build_math_claims import build_math_claims, project_version
 except ImportError:  # pragma: no cover - direct script execution
-    from build_math_claims import build_math_claims
+    from build_math_claims import build_math_claims, project_version
 
 PUBLIC_FILES = (
     "aggregate_metrics.csv",
@@ -193,9 +193,17 @@ def refresh(canonical_run: Path, repo_root: Path) -> dict:
         "manifest_version": 3,
         "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
         "canonical_run_id": manifest["run_id"],
+        "canonical_experiment_code_commit": manifest.get("code_commit", manifest.get("git_commit", "UNKNOWN")),
+        "canonical_experiment_package_version": environment.get("package_version", "UNKNOWN"),
+        "validator_release_version": project_version(repo_root),
+        "manifest_schema_version": 3,
+        "math_claims_schema_version": "1.0",
+        "reference_artifact_commit": manifest.get("artifact_repository_commit", "UNKNOWN"),
+        "release_validator_commit": None,
+        # Deprecated compatibility aliases; their meanings are unchanged.
         "canonical_code_commit": manifest.get("code_commit", manifest.get("git_commit", "UNKNOWN")),
         "canonical_git_commit": manifest.get("code_commit", manifest.get("git_commit", "UNKNOWN")),
-        "artifact_repository_commit": manifest.get("artifact_repository_commit", "PENDING_ARTIFACT_COMMIT"),
+        "artifact_repository_commit": manifest.get("artifact_repository_commit", "UNKNOWN"),
         "source_sha256": manifest["source_sha256"],
         "config_sha256": manifest["config_sha256"],
         "environment": environment,
