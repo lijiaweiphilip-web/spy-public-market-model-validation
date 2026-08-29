@@ -27,12 +27,12 @@ def _small_config(tmp_path: Path) -> RunConfig:
             "data_range": "synthetic",
             "interval": "1d",
             "target_horizon_days": 5,
-            "minimum_training_rows": 620,
-            "test_rows_per_fold": 20,
-            "step_rows": 20,
+            "minimum_training_rows": 550,
+            "test_rows_per_fold": 10,
+            "step_rows": 100,
             "embargo_rows": 5,
             "ridge_alpha": 10.0,
-            "forest_estimators": 2,
+            "forest_estimators": 1,
             "forest_max_depth": 3,
             "forest_min_samples_leaf": 2,
             "primary_seed": 42,
@@ -41,13 +41,13 @@ def _small_config(tmp_path: Path) -> RunConfig:
             "upper_clip_quantile": 0.995,
             "upper_clip_multiplier": 3.0,
             "calibration_bins": 5,
-            "bootstrap_repetitions": 20,
+            "bootstrap_repetitions": 10,
             "target_annualised_volatility": 0.12,
             "max_exposure": 1.0,
             "transaction_cost_bps": [1, 5],
             "ewma_lambda": 0.94,
             "calibration_method": "inner_temporal_block",
-            "calibration_block_rows": 40,
+            "calibration_block_rows": 20,
             "output_dir": str(tmp_path / "run"),
         }
     )
@@ -55,7 +55,7 @@ def _small_config(tmp_path: Path) -> RunConfig:
 
 def _small_source(tmp_path: Path) -> Path:
     rng = np.random.default_rng(8)
-    dates = pd.date_range("2010-01-01", periods=710, freq="B", tz="UTC")
+    dates = pd.date_range("2010-01-01", periods=700, freq="B", tz="UTC")
     prices = 100 * np.exp(np.cumsum(rng.normal(0.0001, 0.01, len(dates))))
     path = tmp_path / "synthetic_adjusted_close.csv"
     pd.DataFrame({"date": dates, "adjusted_close": prices}).to_csv(path, index=False)

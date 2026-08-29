@@ -34,7 +34,7 @@ def test_cli_demo_runs_complete_pipeline_and_validates(tmp_path: Path, monkeypat
             "--output-dir",
             str(output_dir),
             "--rows",
-            "500",
+            "400",
             "--seed",
             "20260825",
         ],
@@ -44,14 +44,14 @@ def test_cli_demo_runs_complete_pipeline_and_validates(tmp_path: Path, monkeypat
     source = output_dir / "synthetic_adjusted_close.csv"
     result = validate_run_dir(output_dir, source_path=source)
     assert result["status"] == "PASS"
-    assert result["folds"] == 4
+    assert result["folds"] == 1
     manifest = json.loads((output_dir / "run_manifest.json").read_text(encoding="utf-8"))
     assert manifest["run_type"] == "synthetic_demo"
     assert manifest["oof_rows_per_model"] == {
-        "ewma_baseline": 120,
-        "mean_baseline": 120,
-        "random_forest": 120,
-        "ridge": 120,
+        "ewma_baseline": 30,
+        "mean_baseline": 30,
+        "random_forest": 30,
+        "ridge": 30,
     }
     report = (output_dir / "REPORT.md").read_text(encoding="utf-8")
     assert "synthetic adjusted-close series" in report

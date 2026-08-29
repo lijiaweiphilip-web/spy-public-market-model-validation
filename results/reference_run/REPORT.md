@@ -28,4 +28,4 @@
 | qlike    | ridge         | mean_baseline |      18.6723      |  -0.224325    |  56.3872      |             0.740741 |
 
 The public reference bundle contains derived summaries only; raw vendor bytes, point-level predictions and exposure paths remain private evidence.
-The private canonical run manifest hashes the complete evidence bundle. Public reference artifacts are independently hashed in [PUBLIC_REFERENCE_MANIFEST.json](PUBLIC_REFERENCE_MANIFEST.json).
+The final `run_manifest.json` hashes every artifact written above.

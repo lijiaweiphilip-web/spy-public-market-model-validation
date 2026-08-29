@@ -7,7 +7,8 @@ does not claim to validate arbitrary machine-learning pipelines.
 
 ``validate_reference_contract`` adds the SPY-specific invariants that apply to
 the checked-in public reference bundle, where point-level predictions are
-deliberately not redistributed.
+deliberately not redistributed. Its validation scope is summary/provenance
+validation, not full point-level recomputation.
 """
 
 from __future__ import annotations
@@ -23,6 +24,14 @@ import pandas as pd
 from .config import RunConfig
 from .evaluation import add_decision_cost_diagnostics
 from .metrics import calibration_table, regression_metrics
+from .provenance import (
+    BINARY_SUFFIXES,
+    RAW_HASH_MODE,
+    TEXT_HASH_MODE,
+    canonical_bytes,
+    is_safe_flat_path,
+    sha256_bytes,
+)
 
 REQUIRED_RUN_ARTIFACTS = {
     "predictions_oof.csv",
@@ -49,7 +58,7 @@ PREDICTION_COLUMNS = {
 }
 METRIC_COLUMNS = ("n", "mae", "rmse", "qlike", "calibration_ratio", "spearman")
 REFERENCE_MODELS = {"mean_baseline", "ewma_baseline", "ridge", "random_forest"}
-BINARY_REFERENCE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".parquet"}
+BINARY_REFERENCE_SUFFIXES = BINARY_SUFFIXES
 HASH_PATTERN = set("0123456789abcdef")
 
 
@@ -62,8 +71,7 @@ def sha256(path: Path) -> str:
 
 
 def _normalized_text_sha256(path: Path) -> str:
-    normalized = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-    return hashlib.sha256(normalized).hexdigest()
+    return sha256_bytes(canonical_bytes(path, TEXT_HASH_MODE))
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -396,6 +404,7 @@ def validate_run_dir(
     models, folds, actual_rows = _validate_prediction_tables(run_dir, manifest, config_file)
     return {
         "status": "PASS",
+        "validation_scope": "generic_full_recomputation",
         "run_dir": str(run_dir),
         "manifest_version": manifest.get("manifest_version"),
         "folds": folds,
@@ -416,6 +425,16 @@ def _validate_json_schema(document: dict[str, Any], schema_path: Path, label: st
     if errors:
         message = "; ".join(error.message for error in errors[:3])
         raise RuntimeError(f"{label} schema validation failed: {message}")
+
+
+def _schema_path(name: str) -> Path:
+    """Resolve a schema from an installed wheel or a source checkout."""
+
+    packaged = Path(__file__).resolve().parent / "schemas" / name
+    if packaged.is_file():
+        return packaged
+    source_tree = Path(__file__).resolve().parents[2] / "schemas" / name
+    return source_tree
 
 
 def _validate_reference_summary_tables(reference_dir: Path, manifest: dict[str, Any]) -> None:
@@ -488,10 +507,9 @@ def validate_reference_contract(reference_dir: Path) -> dict[str, Any]:
     manifest = _read_json(manifest_path)
     if manifest.get("manifest_version") != 3:
         raise RuntimeError("Public reference manifest must use manifest_version 3")
-    repo_root = Path(__file__).resolve().parents[2]
     _validate_json_schema(
         manifest,
-        repo_root / "schemas" / "public_reference_manifest.schema.json",
+        _schema_path("public_reference_manifest.schema.json"),
         "reference manifest",
     )
     hashes = manifest.get("public_artifact_sha256")
@@ -499,28 +517,44 @@ def validate_reference_contract(reference_dir: Path) -> dict[str, Any]:
     if not isinstance(hashes, dict) or not isinstance(details, dict):
         raise TypeError("Public reference manifest hash maps are incomplete")
     actual_files = {
-        path.name for path in reference_dir.iterdir() if path.is_file() and path.name != manifest_path.name
+        path.name
+        for path in reference_dir.iterdir()
+        if path.is_file() and path.name != manifest_path.name
     }
     if actual_files != set(hashes):
         raise RuntimeError(f"Public reference file set differs from manifest: {sorted(actual_files ^ set(hashes))}")
     for name, expected in hashes.items():
-        if Path(name).name != name or not isinstance(expected, str) or len(expected) != 64:
+        if not is_safe_flat_path(name) or not isinstance(expected, str) or len(expected) != 64:
             raise RuntimeError(f"Invalid public artifact hash entry: {name}")
         path = reference_dir / name
-        actual = sha256(path)
-        if actual != expected:
-            raise RuntimeError(f"Public reference hash mismatch: {name}")
         item = details.get(name)
-        if item is None and Path(name).suffix.lower() in BINARY_REFERENCE_SUFFIXES:
-            continue
-        if not isinstance(item, dict) or item.get("hash_algorithm") != "sha256":
+        if not isinstance(item, dict):
+            raise RuntimeError(f"Hash details are incomplete: {name}")  # noqa: TRY004
+        content_type = item.get("content_type")
+        hash_mode = item.get("hash_mode")
+        if content_type == "text" and hash_mode != TEXT_HASH_MODE:
+            raise RuntimeError(f"Text artifact must use {TEXT_HASH_MODE}: {name}")
+        if content_type == "binary" and hash_mode != RAW_HASH_MODE:
+            raise RuntimeError(f"Binary artifact must use {RAW_HASH_MODE}: {name}")
+        if content_type not in {"text", "binary"} or item.get("hash_algorithm") != "sha256":
             raise RuntimeError(f"Hash details are incomplete: {name}")
-        if item.get("raw_sha256") != actual:
-            raise RuntimeError(f"Raw hash detail mismatch: {name}")
-        if item.get("text_normalization") == "git-lf-v1" and item.get("normalized_sha256") != _normalized_text_sha256(path):
-            raise RuntimeError(f"Normalized hash detail mismatch: {name}")
+        actual = sha256_bytes(canonical_bytes(path, str(hash_mode)))
+        canonical = item.get("canonical_sha256")
+        if not isinstance(canonical, str) or len(canonical) != 64 or set(canonical.lower()) - HASH_PATTERN:
+            raise RuntimeError(f"Invalid canonical hash detail: {name}")
+        if actual != canonical or actual != expected:
+            raise RuntimeError(f"Public reference hash mismatch: {name}")
+        if content_type == "text":
+            source_raw = item.get("source_raw_sha256")
+            if not isinstance(source_raw, str) or len(source_raw) != 64 or set(source_raw.lower()) - HASH_PATTERN:
+                raise RuntimeError(f"Text source raw hash detail is invalid: {name}")
     contract = manifest.get("hash_contract", {})
-    if contract.get("artifact_sha256_mode") != "raw_bytes" or contract.get("text_normalization_mode") != "git-lf-v1":
+    if (
+        contract.get("artifact_sha256_mode") != "canonical_by_hash_mode"
+        or contract.get("text_normalization_mode") != TEXT_HASH_MODE
+        or contract.get("binary_hash_mode") != RAW_HASH_MODE
+        or contract.get("canonical_hash_field") != "canonical_sha256"
+    ):
         raise RuntimeError("Public hash contract mode is incomplete")
     required = {"aggregate_metrics.csv", "fold_metrics.csv", "config_used.json", "environment.json", "MATH_CLAIMS.json"}
     if not required.issubset(hashes):
@@ -540,7 +574,7 @@ def validate_reference_contract(reference_dir: Path) -> dict[str, Any]:
 
     claims_path = reference_dir / "MATH_CLAIMS.json"
     claims = _read_json(claims_path)
-    _validate_json_schema(claims, repo_root / "schemas" / "math_claims.schema.json", "math claims")
+    _validate_json_schema(claims, _schema_path("math_claims.schema.json"), "math claims")
     if claims.get("reference_manifest_version") != 3:
         raise RuntimeError("MATH_CLAIMS reference manifest version mismatch")
     if claims.get("canonical_run_id") != manifest.get("canonical_run_id"):
@@ -549,6 +583,7 @@ def validate_reference_contract(reference_dir: Path) -> dict[str, Any]:
         raise RuntimeError("MATH_CLAIMS canonical code commit mismatch")
     return {
         "status": "PASS",
+        "validation_scope": "public_reference_summary_and_provenance_validation",
         "reference_dir": str(reference_dir),
         "manifest_version": 3,
         "folds": 27,

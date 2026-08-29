@@ -3,23 +3,11 @@
   "title": "SPY mathematical claims",
   "type": "object",
   "required": [
-    "schema_version",
-    "task",
-    "asset",
-    "target_definition",
-    "target_horizon_days",
-    "fold_protocol",
-    "folds",
-    "models",
-    "metrics",
-    "oof_rows_per_model",
-    "canonical_run_id",
-    "canonical_experiment_code_commit",
-    "claims_generator_sha256",
-    "mathematical_contract_sha256",
-    "reference_manifest_version",
-    "generated_from_artifacts",
-    "non_claims"
+    "schema_version", "task", "asset", "target_definition",
+    "target_horizon_days", "fold_protocol", "folds", "models", "metrics",
+    "oof_rows_per_model", "canonical_run_id", "canonical_experiment_code_commit",
+    "claims_generator_sha256", "mathematical_contract_sha256",
+    "reference_manifest_version", "generated_from_artifacts", "non_claims"
   ],
   "properties": {
     "schema_version": {"type": "string", "enum": ["1.0", "1.1"]},
@@ -32,8 +20,7 @@
     "models": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
     "metrics": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
     "oof_rows_per_model": {
-      "type": "object",
-      "minProperties": 1,
+      "type": "object", "minProperties": 1,
       "additionalProperties": {"type": "integer", "minimum": 1}
     },
     "canonical_run_id": {"type": "string", "minLength": 1},

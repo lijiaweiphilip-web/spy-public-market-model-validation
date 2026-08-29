@@ -7,7 +7,6 @@ predictions, exposure paths, raw vendor bytes, or the private run manifest.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
 import shutil
@@ -15,6 +14,14 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+
+try:
+    from spy_validation.provenance import artifact_hash_detail
+except ImportError:  # pragma: no cover - direct script execution
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    from spy_validation.provenance import artifact_hash_detail
 
 try:
     from .build_math_claims import build_math_claims
@@ -47,26 +54,6 @@ PRIVATE_OR_UNSAFE = {
     "illustrative_exposure_path.csv",
     "run_manifest.json",
 }
-
-
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def hash_details(path: Path) -> dict[str, str]:
-    """Return raw and explicit Git-LF-normalized SHA-256 values for text."""
-    raw = path.read_bytes()
-    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-    return {
-        "hash_algorithm": "sha256",
-        "text_normalization": "git-lf-v1",
-        "raw_sha256": hashlib.sha256(raw).hexdigest(),
-        "normalized_sha256": hashlib.sha256(normalized).hexdigest(),
-    }
 
 
 def _reset_directory(path: Path) -> None:
@@ -171,7 +158,7 @@ def _refresh_readme(repo_root: Path, aggregate: pd.DataFrame) -> None:
         if anchor not in text:
             raise RuntimeError("README canonical-results end marker was not found")
         text = text.replace(anchor, anchor + "\n\n" + interpretation, 1)
-    readme_path.write_text(text, encoding="utf-8")
+    readme_path.write_text(text, encoding="utf-8", newline="\n")
 
 
 def refresh(canonical_run: Path, repo_root: Path) -> dict:
@@ -220,27 +207,27 @@ def refresh(canonical_run: Path, repo_root: Path) -> dict:
         "public_artifact_sha256": {},
         "public_artifact_hash_details": {},
         "hash_contract": {
-            "artifact_sha256_mode": "raw_bytes",
+            "artifact_sha256_mode": "canonical_by_hash_mode",
             "text_normalization_mode": "git-lf-v1",
-            "text_normalization_note": "public_artifact_hash_details reports both raw UTF-8 bytes and Git-LF-normalized text hashes; the legacy public_artifact_sha256 map remains raw-byte compatible.",
+            "binary_hash_mode": "raw-bytes",
+            "canonical_hash_field": "canonical_sha256",
+            "text_normalization_note": "Text artifacts are validated after CRLF/CR to LF canonicalisation; source_raw_sha256 records generator working-tree provenance only.",
         },
     }
     manifest_path = output_dir / "PUBLIC_REFERENCE_MANIFEST.json"
-    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8")
+    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
     build_math_claims(repo_root, public_manifest)
-    public_manifest["public_artifact_sha256"] = {
-        path.name: sha256(path)
-        for path in sorted(output_dir.iterdir())
-        if path.is_file() and path.name != manifest_path.name
-    }
     public_manifest["public_artifact_hash_details"] = {
-        path.name: hash_details(path)
+        path.name: artifact_hash_detail(path)
         for path in sorted(output_dir.iterdir())
         if path.is_file()
         and path.name != manifest_path.name
-        and path.suffix.lower() in {".csv", ".json", ".md"}
     }
-    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8")
+    public_manifest["public_artifact_sha256"] = {
+        name: details["canonical_sha256"]
+        for name, details in sorted(public_manifest["public_artifact_hash_details"].items())
+    }
+    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
     return public_manifest
 
 

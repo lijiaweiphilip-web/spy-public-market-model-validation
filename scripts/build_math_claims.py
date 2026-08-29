@@ -8,30 +8,18 @@ and non-circular.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 
 import pandas as pd
 
+try:
+    from spy_validation.provenance import artifact_hash_detail, raw_sha256
+except ImportError:  # pragma: no cover - direct script execution
+    import sys
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def hash_details(path: Path) -> dict[str, str]:
-    raw = path.read_bytes()
-    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-    return {
-        "hash_algorithm": "sha256",
-        "text_normalization": "git-lf-v1",
-        "raw_sha256": hashlib.sha256(raw).hexdigest(),
-        "normalized_sha256": hashlib.sha256(normalized).hexdigest(),
-    }
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    from spy_validation.provenance import artifact_hash_detail, raw_sha256
 
 
 def build_math_claims(repo_root: Path, manifest: dict | None = None) -> dict:
@@ -92,9 +80,10 @@ def build_math_claims(repo_root: Path, manifest: dict | None = None) -> dict:
         "canonical_experiment_code_commit": str(
             manifest.get("canonical_code_commit", environment.get("code_commit", "UNKNOWN"))
         ),
-        "claims_generator_sha256": sha256(generator_path),
-        "mathematical_contract_sha256": hash_details(contract_path)["raw_sha256"],
-        "mathematical_contract_normalized_sha256": hash_details(contract_path)["normalized_sha256"],
+        "claims_generator_sha256": raw_sha256(generator_path),
+        "mathematical_contract_sha256": artifact_hash_detail(contract_path)["source_raw_sha256"],
+        "mathematical_contract_normalized_sha256": artifact_hash_detail(contract_path)["canonical_sha256"],
+        "mathematical_contract_hash_mode": "git-lf-v1",
         "reference_manifest_version": int(manifest["manifest_version"]),
         "generated_from_artifacts": generated_from,
         "provenance_note": (
@@ -114,7 +103,7 @@ def build_math_claims(repo_root: Path, manifest: dict | None = None) -> dict:
         ],
     }
     output_path = reference_dir / "MATH_CLAIMS.json"
-    output_path.write_text(json.dumps(claims, indent=2) + "\n", encoding="utf-8")
+    output_path.write_text(json.dumps(claims, indent=2) + "\n", encoding="utf-8", newline="\n")
     return claims
 
 

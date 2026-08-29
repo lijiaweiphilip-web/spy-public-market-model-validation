@@ -105,9 +105,12 @@ def demo_command(args: argparse.Namespace) -> int:
             "minimum_training_rows": 300,
             "test_rows_per_fold": 30,
             "step_rows": 30,
-            "forest_estimators": min(base_cfg.forest_estimators, 12),
+            # The public demo is a wiring/reproducibility check, not a model
+            # comparison.  One tree keeps it deterministic and lightweight
+            # without changing the canonical reference configuration.
+            "forest_estimators": min(base_cfg.forest_estimators, 1),
             "calibration_block_rows": min(base_cfg.calibration_block_rows, 60),
-            "bootstrap_repetitions": min(base_cfg.bootstrap_repetitions, 100),
+            "bootstrap_repetitions": min(base_cfg.bootstrap_repetitions, 20),
             "output_dir": str(output_dir),
         }
     )

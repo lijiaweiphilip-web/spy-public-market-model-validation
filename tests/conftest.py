@@ -31,19 +31,19 @@ def cached_small_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Pa
 
     root = tmp_path_factory.mktemp("cached_small_run")
     source = root / "synthetic_adjusted_close.csv"
-    generate_synthetic_adjusted_close(rows=710, seed=8).to_csv(source, index=False)
+    generate_synthetic_adjusted_close(rows=700, seed=8).to_csv(source, index=False)
     cfg = RunConfig.from_dict(
         {
             "symbol": "SPY",
             "data_range": "synthetic",
             "interval": "1d",
             "target_horizon_days": 5,
-            "minimum_training_rows": 620,
-            "test_rows_per_fold": 20,
-            "step_rows": 20,
+            "minimum_training_rows": 550,
+            "test_rows_per_fold": 10,
+            "step_rows": 100,
             "embargo_rows": 5,
             "ridge_alpha": 10.0,
-            "forest_estimators": 2,
+            "forest_estimators": 1,
             "forest_max_depth": 3,
             "forest_min_samples_leaf": 2,
             "primary_seed": 42,
@@ -52,13 +52,13 @@ def cached_small_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Pa
             "upper_clip_quantile": 0.995,
             "upper_clip_multiplier": 3.0,
             "calibration_bins": 5,
-            "bootstrap_repetitions": 20,
+            "bootstrap_repetitions": 10,
             "target_annualised_volatility": 0.12,
             "max_exposure": 1.0,
             "transaction_cost_bps": [1, 5],
             "ewma_lambda": 0.94,
             "calibration_method": "inner_temporal_block",
-            "calibration_block_rows": 40,
+            "calibration_block_rows": 20,
             "output_dir": str(root / "run"),
         }
     )

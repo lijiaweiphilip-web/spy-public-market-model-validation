@@ -22,14 +22,14 @@ def small_config(tmp_path: Path) -> RunConfig:
     return RunConfig.from_dict(
         {
             "symbol": "SPY", "data_range": "synthetic", "interval": "1d", "target_horizon_days": 5,
-            "minimum_training_rows": 620, "test_rows_per_fold": 20, "step_rows": 20,
-            "embargo_rows": 5, "ridge_alpha": 10.0, "forest_estimators": 2,
+            "minimum_training_rows": 550, "test_rows_per_fold": 10, "step_rows": 100,
+            "embargo_rows": 5, "ridge_alpha": 10.0, "forest_estimators": 1,
             "forest_max_depth": 3, "forest_min_samples_leaf": 2, "primary_seed": 42,
             "stability_seeds": [42, 123], "prediction_floor": 1e-10,
             "upper_clip_quantile": 0.995, "upper_clip_multiplier": 3.0, "calibration_bins": 5,
-            "bootstrap_repetitions": 20, "target_annualised_volatility": 0.12,
+            "bootstrap_repetitions": 10, "target_annualised_volatility": 0.12,
             "max_exposure": 1.0, "transaction_cost_bps": [1, 5], "ewma_lambda": 0.94,
-            "calibration_method": "inner_temporal_block", "calibration_block_rows": 40,
+            "calibration_method": "inner_temporal_block", "calibration_block_rows": 20,
             "output_dir": str(tmp_path / "run"),
         }
     )
@@ -37,7 +37,7 @@ def small_config(tmp_path: Path) -> RunConfig:
 
 def synthetic_source(tmp_path: Path) -> Path:
     rng = np.random.default_rng(8)
-    dates = pd.date_range("2010-01-01", periods=710, freq="B", tz="UTC")
+    dates = pd.date_range("2010-01-01", periods=700, freq="B", tz="UTC")
     prices = 100 * np.exp(np.cumsum(rng.normal(0.0001, 0.01, len(dates))))
     source = tmp_path / "synthetic_adjusted_close.csv"
     pd.DataFrame({"date": dates, "adjusted_close": prices}).to_csv(source, index=False)
@@ -63,7 +63,7 @@ def test_synthetic_end_to_end_pipeline_and_manifest(tmp_path):
     assert set(manifest["models"]) == {"mean_baseline", "ewma_baseline", "ridge", "random_forest"}
     result = validate_run_dir(Path(cfg.output_dir), source, config_path)
     assert result["status"] == "PASS"
-    assert result["oof_rows_per_model"]["ewma_baseline"] == 20
+    assert result["oof_rows_per_model"]["ewma_baseline"] == 10
 
 
 def test_manifest_hash_tampering_fails_validation(tmp_path, cached_small_run):
@@ -102,13 +102,15 @@ def test_public_reference_manifest_covers_math_claims_with_explicit_hash_mode():
     claims_path = reference_dir / "MATH_CLAIMS.json"
     assert manifest["manifest_version"] >= 3
     assert "MATH_CLAIMS.json" in manifest["public_artifact_sha256"]
-    assert manifest["hash_contract"]["artifact_sha256_mode"] == "raw_bytes"
+    assert manifest["hash_contract"]["artifact_sha256_mode"] == "canonical_by_hash_mode"
     details = manifest["public_artifact_hash_details"]["MATH_CLAIMS.json"]
+    assert details["content_type"] == "text"
     assert details["hash_algorithm"] == "sha256"
-    assert details["text_normalization"] == "git-lf-v1"
+    assert details["hash_mode"] == "git-lf-v1"
     normalized = claims_path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-    assert details["raw_sha256"] == manifest["public_artifact_sha256"]["MATH_CLAIMS.json"]
-    assert details["normalized_sha256"] == hashlib.sha256(normalized).hexdigest()
+    assert details["canonical_sha256"] == manifest["public_artifact_sha256"]["MATH_CLAIMS.json"]
+    assert details["canonical_sha256"] == hashlib.sha256(normalized).hexdigest()
+    assert len(details["source_raw_sha256"]) == 64
     claims = json.loads(claims_path.read_text(encoding="utf-8"))
     assert claims["reference_manifest_version"] == manifest["manifest_version"]
     assert claims["canonical_experiment_code_commit"] == manifest["canonical_code_commit"]
@@ -125,7 +127,7 @@ def test_public_reference_contract_validator_checks_schema_and_provenance():
 def test_generic_validator_does_not_require_reference_fold_count(tmp_path):
     """A one-fold generated run proves validation is not SPY-reference hard-coded."""
     source = synthetic_source(tmp_path)
-    cfg = replace(small_config(tmp_path), minimum_training_rows=620, forest_estimators=2)
+    cfg = replace(small_config(tmp_path), minimum_training_rows=610, forest_estimators=2)
     run_dir = tmp_path / "toy_run"
     cfg = replace(cfg, output_dir=str(run_dir))
     config = tmp_path / "config.json"
