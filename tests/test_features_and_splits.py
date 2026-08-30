@@ -49,7 +49,7 @@ def test_five_day_target_matches_exact_forward_squared_return_sum():
     assert row["target_end_timestamp"] == prices.iloc[source_index + 5]["date"]
 
 
-def test_ewma_is_causal_and_uses_fixed_lambda():
+def test_ewma_is_non_anticipating_and_uses_fixed_lambda():
     returns = np.array([np.nan, 0.1, 0.2, 0.3])
     result = ewma_variance(returns, decay=0.94)
     assert np.isnan(result[0])

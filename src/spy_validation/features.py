@@ -25,11 +25,12 @@ EWMA_FEATURE_COLUMN = "ewma_variance_0_94"
 
 
 def ewma_variance(values: pd.Series | np.ndarray, decay: float = 0.94) -> np.ndarray:
-    """Return a causal EWMA of squared log returns.
+    """Return a non-anticipating EWMA of squared log returns.
 
-    The value at t uses only returns observed on or before t. The first valid
-    return seeds the recursion; missing values remain missing until a valid
-    return is observed.
+    The value at t uses only returns observed on or before t. This is a
+    temporal information-availability property, not a causal-inference claim.
+    The first valid return seeds the recursion; missing values remain missing
+    until a valid return is observed.
     """
     if not 0.0 < decay < 1.0:
         raise ValueError("decay must be between 0 and 1")

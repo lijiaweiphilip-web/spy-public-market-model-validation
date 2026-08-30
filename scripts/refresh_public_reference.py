@@ -7,7 +7,6 @@ predictions, exposure paths, raw vendor bytes, or the private run manifest.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
 import shutil
@@ -15,6 +14,19 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+
+try:
+    from spy_validation.provenance import artifact_hash_detail
+except ImportError:  # pragma: no cover - direct script execution
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    from spy_validation.provenance import artifact_hash_detail
+
+try:
+    from .build_math_claims import build_math_claims, project_version
+except ImportError:  # pragma: no cover - direct script execution
+    from build_math_claims import build_math_claims, project_version
 
 PUBLIC_FILES = (
     "aggregate_metrics.csv",
@@ -42,14 +54,6 @@ PRIVATE_OR_UNSAFE = {
     "illustrative_exposure_path.csv",
     "run_manifest.json",
 }
-
-
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _reset_directory(path: Path) -> None:
@@ -154,7 +158,7 @@ def _refresh_readme(repo_root: Path, aggregate: pd.DataFrame) -> None:
         if anchor not in text:
             raise RuntimeError("README canonical-results end marker was not found")
         text = text.replace(anchor, anchor + "\n\n" + interpretation, 1)
-    readme_path.write_text(text, encoding="utf-8")
+    readme_path.write_text(text, encoding="utf-8", newline="\n")
 
 
 def refresh(canonical_run: Path, repo_root: Path) -> dict:
@@ -186,12 +190,20 @@ def refresh(canonical_run: Path, repo_root: Path) -> dict:
 
     environment = json.loads((output_dir / "environment.json").read_text(encoding="utf-8"))
     public_manifest = {
-        "manifest_version": 2,
+        "manifest_version": 3,
         "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
         "canonical_run_id": manifest["run_id"],
+        "canonical_experiment_code_commit": manifest.get("code_commit", manifest.get("git_commit", "UNKNOWN")),
+        "canonical_experiment_package_version": environment.get("package_version", "UNKNOWN"),
+        "validator_release_version": project_version(repo_root),
+        "manifest_schema_version": 3,
+        "math_claims_schema_version": "1.0",
+        "reference_artifact_commit": manifest.get("artifact_repository_commit", "UNKNOWN"),
+        "release_validator_commit": None,
+        # Deprecated compatibility aliases; their meanings are unchanged.
         "canonical_code_commit": manifest.get("code_commit", manifest.get("git_commit", "UNKNOWN")),
         "canonical_git_commit": manifest.get("code_commit", manifest.get("git_commit", "UNKNOWN")),
-        "artifact_repository_commit": manifest.get("artifact_repository_commit", "PENDING_ARTIFACT_COMMIT"),
+        "artifact_repository_commit": manifest.get("artifact_repository_commit", "UNKNOWN"),
         "source_sha256": manifest["source_sha256"],
         "config_sha256": manifest["config_sha256"],
         "environment": environment,
@@ -201,16 +213,29 @@ def refresh(canonical_run: Path, repo_root: Path) -> dict:
         "checks": manifest["checks"],
         "public_note": "Derived summaries only; raw vendor bytes, point predictions, exposure paths and private run manifest are excluded.",
         "public_artifact_sha256": {},
+        "public_artifact_hash_details": {},
+        "hash_contract": {
+            "artifact_sha256_mode": "canonical_by_hash_mode",
+            "text_normalization_mode": "git-lf-v1",
+            "binary_hash_mode": "raw-bytes",
+            "canonical_hash_field": "canonical_sha256",
+            "text_normalization_note": "Text artifacts are validated after CRLF/CR to LF canonicalisation; source_raw_sha256 records generator working-tree provenance only.",
+        },
     }
     manifest_path = output_dir / "PUBLIC_REFERENCE_MANIFEST.json"
-    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8")
-    public_manifest["public_artifact_sha256"] = {
-        path.name: sha256(path)
+    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
+    build_math_claims(repo_root, public_manifest)
+    public_manifest["public_artifact_hash_details"] = {
+        path.name: artifact_hash_detail(path)
         for path in sorted(output_dir.iterdir())
-        if path.is_file() and path.name != manifest_path.name
+        if path.is_file()
+        and path.name != manifest_path.name
     }
-    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8")
-    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8")
+    public_manifest["public_artifact_sha256"] = {
+        name: details["canonical_sha256"]
+        for name, details in sorted(public_manifest["public_artifact_hash_details"].items())
+    }
+    manifest_path.write_text(json.dumps(public_manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
     return public_manifest
 
 

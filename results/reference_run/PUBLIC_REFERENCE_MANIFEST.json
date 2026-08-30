@@ -1,7 +1,14 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "scope": "SPY five-day realised-variance model validation; no trading-performance claim",
   "canonical_run_id": "20260825T112527Z",
+  "canonical_experiment_code_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
+  "canonical_experiment_package_version": "0.1.0",
+  "validator_release_version": "0.2.0",
+  "manifest_schema_version": 3,
+  "math_claims_schema_version": "1.0",
+  "reference_artifact_commit": "9b732b1c448d436e59808b816dfec2b2567996e0",
+  "release_validator_commit": null,
   "canonical_code_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
   "canonical_git_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
   "artifact_repository_commit": "9b732b1c448d436e59808b816dfec2b2567996e0",
@@ -52,24 +59,170 @@
   },
   "public_note": "Derived summaries only; raw vendor bytes, point predictions, exposure paths and private run manifest are excluded.",
   "public_artifact_sha256": {
-    "aggregate_metrics.csv": "b8d96cc27f0e71ea1c129e3c2c44d9898d33b9380af55a47b8f19ef074378f56",
-    "bootstrap_model_comparison.csv": "5df5fadfb8cb49454f40a1f0b4f06370edeb956d915f86b456d8f0914e5400d0",
-    "calibration_bins.csv": "732278204364f49b4cc727f5dad9b481e022f2d0508068bb5979a93baab3b829",
+    "aggregate_metrics.csv": "7ab9dd87b7bbddde89e7eee91d0b0a353cf73e9245006511775fd416788e6619",
+    "bootstrap_model_comparison.csv": "0c82b833458dec29d5b21d9b9e73656a8d5d761ec38a5f20e30df34b8d8a5f62",
+    "calibration_bins.csv": "47f350051e01c09228bebefe4bd0b187d59c3607d113fd7364593839f0a2a558",
     "calibration_bins.png": "427053615e3130ae06d3d2076b567e2fbfc9f976be52660fbbb04207443f25c4",
     "config_used.json": "50714ae7f90ad53f8d025dfa4855f88c91d03a299598d320df123d231fe22905",
-    "decision_cost_sensitivity.csv": "068c3073f0acc3203d843e68f4cd9ba54386bc3891e374c93cd26ce19d61eb1d",
+    "decision_cost_sensitivity.csv": "d71e5a4892a446ac160cbb46aa2866df80d4cf575fdb0e8e1c474978780ba4b4",
     "decision_cost_sensitivity.png": "bf2468fedd673f415a981d5b5955872b71fd296f429af07f49298906e3c2c2b6",
-    "environment.json": "8d35b9dabd5c937d7f8553cd22fde0b1ce797d9ad0ab6aa9646c887263d94a8e",
-    "failure_analysis.md": "f6f77334e03ee20ac62db43c371cde4c98cf07d35272b798c6edb340c73d9f03",
-    "fold_metrics.csv": "73b5d204ec80492e07aa9fed77a8f3e7da33fdb6908b728c481f9dea851d43cb",
+    "environment.json": "86f1868400c5e869694b838d7f59b46150c37769fd4cf19e87988136183cf1f6",
+    "failure_analysis.md": "13c5ee38b278c2fdfe3d54177405b1d0cf3b7b5de74e002693e5b1e7b136ce2a",
+    "fold_metrics.csv": "92eae4982a6c2aabf47b6954d70eb862e817a482397613d56f49e138aab2baff",
     "fold_rmse.png": "35ce3ff515452424d51e79dd47827c5ce2fba4756b5e14884f26ee3a9cff82e9",
-    "model_card.md": "3347a39b5b4a1c61d4fb33da158735482f717e14a95ebcb1fdffcda9922e2c9b",
-    "prediction_clipping_audit.csv": "729029fc4b7c5fac0ff14554626d5cd8229d7edf445342823a2a4bbea23d9db5",
-    "random_forest_feature_importance.csv": "d5a292bf1acc2a2b4a55a9cda46c68b797502649e523b98ac6ce97146d3e9efe",
-    "random_forest_seed_stability.csv": "21743eac3610db9e1b8a51d55f044ed4a98fb6b4ef2ab8942909df41fcd118eb",
-    "regime_metrics.csv": "e44b2e0d2cdfdf73094d0f474f89b6582e08ad0e61fee3f64e385d0202b1033b",
+    "MATH_CLAIMS.json": "c236abd9e8a03565ea9074b9942438a1e41c48a5c7e406e7de3fa3c9e0b5e3df",
+    "model_card.md": "80052cd2cbcc551afe43528c7a2b62395c0fdc50870c5e32b329432506d74ac6",
+    "prediction_clipping_audit.csv": "e620757752601ef62a80ac3fe254b5405ada67bd1d16a4e693c9565c6aa438c4",
+    "random_forest_feature_importance.csv": "504cc9f5a091f0c4073a97bacd017c705b221556fa29fdbc6a0d138799be117e",
+    "random_forest_seed_stability.csv": "b14749eb6816b41e6e6cf2e9e8d620464710574912f8e95006840a6464eeda41",
+    "regime_metrics.csv": "76fa20d1441b1c816519eedee9707bbb6e06f79fe59f3b68e56fb7c65c077a63",
     "regime_qlike.png": "798503d7054462c6cc455329afbebd557d42869ee830821961c3c4402796d989",
-    "REPORT.md": "c00aed24c98ea17caf80afcae9c304035031dcb5f4b1caf5fb9b9a2294a0b7b5",
-    "ridge_coefficients.csv": "bded558ea7a2c2200029c9f6789b55c7cf6510bf24656dbd1f2185d29e51999e"
+    "REPORT.md": "3085cbac66034a194ab2880579df2a7643f7a887fc5c5d9215bb40bc81564e23",
+    "ridge_coefficients.csv": "0d1d0305ae2833a4809e8c11415a4ddf89a88637384f79f38685638eea380cc6"
+  },
+  "public_artifact_hash_details": {
+    "aggregate_metrics.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "7ab9dd87b7bbddde89e7eee91d0b0a353cf73e9245006511775fd416788e6619",
+      "source_raw_sha256": "b8d96cc27f0e71ea1c129e3c2c44d9898d33b9380af55a47b8f19ef074378f56"
+    },
+    "bootstrap_model_comparison.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "0c82b833458dec29d5b21d9b9e73656a8d5d761ec38a5f20e30df34b8d8a5f62",
+      "source_raw_sha256": "5df5fadfb8cb49454f40a1f0b4f06370edeb956d915f86b456d8f0914e5400d0"
+    },
+    "calibration_bins.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "47f350051e01c09228bebefe4bd0b187d59c3607d113fd7364593839f0a2a558",
+      "source_raw_sha256": "732278204364f49b4cc727f5dad9b481e022f2d0508068bb5979a93baab3b829"
+    },
+    "calibration_bins.png": {
+      "content_type": "binary",
+      "hash_algorithm": "sha256",
+      "hash_mode": "raw-bytes",
+      "canonical_sha256": "427053615e3130ae06d3d2076b567e2fbfc9f976be52660fbbb04207443f25c4"
+    },
+    "config_used.json": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "50714ae7f90ad53f8d025dfa4855f88c91d03a299598d320df123d231fe22905",
+      "source_raw_sha256": "50714ae7f90ad53f8d025dfa4855f88c91d03a299598d320df123d231fe22905"
+    },
+    "decision_cost_sensitivity.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "d71e5a4892a446ac160cbb46aa2866df80d4cf575fdb0e8e1c474978780ba4b4",
+      "source_raw_sha256": "068c3073f0acc3203d843e68f4cd9ba54386bc3891e374c93cd26ce19d61eb1d"
+    },
+    "decision_cost_sensitivity.png": {
+      "content_type": "binary",
+      "hash_algorithm": "sha256",
+      "hash_mode": "raw-bytes",
+      "canonical_sha256": "bf2468fedd673f415a981d5b5955872b71fd296f429af07f49298906e3c2c2b6"
+    },
+    "environment.json": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "86f1868400c5e869694b838d7f59b46150c37769fd4cf19e87988136183cf1f6",
+      "source_raw_sha256": "8d35b9dabd5c937d7f8553cd22fde0b1ce797d9ad0ab6aa9646c887263d94a8e"
+    },
+    "failure_analysis.md": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "13c5ee38b278c2fdfe3d54177405b1d0cf3b7b5de74e002693e5b1e7b136ce2a",
+      "source_raw_sha256": "f6f77334e03ee20ac62db43c371cde4c98cf07d35272b798c6edb340c73d9f03"
+    },
+    "fold_metrics.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "92eae4982a6c2aabf47b6954d70eb862e817a482397613d56f49e138aab2baff",
+      "source_raw_sha256": "73b5d204ec80492e07aa9fed77a8f3e7da33fdb6908b728c481f9dea851d43cb"
+    },
+    "fold_rmse.png": {
+      "content_type": "binary",
+      "hash_algorithm": "sha256",
+      "hash_mode": "raw-bytes",
+      "canonical_sha256": "35ce3ff515452424d51e79dd47827c5ce2fba4756b5e14884f26ee3a9cff82e9"
+    },
+    "MATH_CLAIMS.json": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "c236abd9e8a03565ea9074b9942438a1e41c48a5c7e406e7de3fa3c9e0b5e3df",
+      "source_raw_sha256": "c236abd9e8a03565ea9074b9942438a1e41c48a5c7e406e7de3fa3c9e0b5e3df"
+    },
+    "model_card.md": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "80052cd2cbcc551afe43528c7a2b62395c0fdc50870c5e32b329432506d74ac6",
+      "source_raw_sha256": "d32d013027ea909fde9cb71859e12c79bd6802f2682c28721073644485513ea0"
+    },
+    "prediction_clipping_audit.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "e620757752601ef62a80ac3fe254b5405ada67bd1d16a4e693c9565c6aa438c4",
+      "source_raw_sha256": "729029fc4b7c5fac0ff14554626d5cd8229d7edf445342823a2a4bbea23d9db5"
+    },
+    "random_forest_feature_importance.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "504cc9f5a091f0c4073a97bacd017c705b221556fa29fdbc6a0d138799be117e",
+      "source_raw_sha256": "d5a292bf1acc2a2b4a55a9cda46c68b797502649e523b98ac6ce97146d3e9efe"
+    },
+    "random_forest_seed_stability.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "b14749eb6816b41e6e6cf2e9e8d620464710574912f8e95006840a6464eeda41",
+      "source_raw_sha256": "21743eac3610db9e1b8a51d55f044ed4a98fb6b4ef2ab8942909df41fcd118eb"
+    },
+    "regime_metrics.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "76fa20d1441b1c816519eedee9707bbb6e06f79fe59f3b68e56fb7c65c077a63",
+      "source_raw_sha256": "e44b2e0d2cdfdf73094d0f474f89b6582e08ad0e61fee3f64e385d0202b1033b"
+    },
+    "regime_qlike.png": {
+      "content_type": "binary",
+      "hash_algorithm": "sha256",
+      "hash_mode": "raw-bytes",
+      "canonical_sha256": "798503d7054462c6cc455329afbebd557d42869ee830821961c3c4402796d989"
+    },
+    "REPORT.md": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "3085cbac66034a194ab2880579df2a7643f7a887fc5c5d9215bb40bc81564e23",
+      "source_raw_sha256": "77b450fdc64fc5cbdc62a8fb22601520dd664da0f760c9766c5d6321ce75df1e"
+    },
+    "ridge_coefficients.csv": {
+      "content_type": "text",
+      "hash_algorithm": "sha256",
+      "hash_mode": "git-lf-v1",
+      "canonical_sha256": "0d1d0305ae2833a4809e8c11415a4ddf89a88637384f79f38685638eea380cc6",
+      "source_raw_sha256": "bded558ea7a2c2200029c9f6789b55c7cf6510bf24656dbd1f2185d29e51999e"
+    }
+  },
+  "hash_contract": {
+    "artifact_sha256_mode": "canonical_by_hash_mode",
+    "text_normalization_mode": "git-lf-v1",
+    "binary_hash_mode": "raw-bytes",
+    "canonical_hash_field": "canonical_sha256",
+    "text_normalization_note": "Text artifacts are validated after CRLF/CR to LF canonicalisation; source_raw_sha256 records generator working-tree provenance only."
   }
 }

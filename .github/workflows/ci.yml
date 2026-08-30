@@ -12,6 +12,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
@@ -20,6 +21,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+      - name: Base install smoke
+        run: |
+          python -m pip install .
+          spy-validate --help
       - name: Install
         run: python -m pip install -e .[dev]
       - name: Tests and coverage
@@ -28,7 +33,36 @@ jobs:
         run: |
           spy-validate demo --output-dir runs/ci-demo
           spy-validate validate --run-dir runs/ci-demo --source-path runs/ci-demo/synthetic_adjusted_close.csv
+      - name: Validate public reference contract
+        run: spy-validate validate-reference --reference-dir results/reference_run
       - name: Compile
         run: python -m compileall -q src tests scripts
       - name: Static checks
         run: ruff check src tests scripts
+
+  portability:
+    timeout-minutes: 15
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Base install and reference validation
+        run: |
+          python -m pip install .
+          spy-validate validate-reference --reference-dir results/reference_run
+      - name: Install test tooling
+        run: python -m pip install -e .[dev]
+      - name: Hash portability and schema tests
+        run: python -m pytest -q tests/test_hash_portability.py tests/test_validation_schemas.py
+      - name: Compile clean archive
+        shell: bash
+        run: |
+          git archive --format=tar HEAD > clean-tree.tar
+          test -s clean-tree.tar

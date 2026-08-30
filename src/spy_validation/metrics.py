@@ -65,7 +65,24 @@ def bootstrap_fold_differences(
     repetitions: int,
     seed: int,
 ) -> pd.DataFrame:
-    pivot = fold_metrics.pivot(index="fold", columns="model", values=metric).dropna()
+    required = {"fold", "model", metric}
+    missing_columns = required - set(fold_metrics.columns)
+    if missing_columns:
+        raise ValueError(f"Fold metrics are missing columns: {sorted(missing_columns)}")
+    if fold_metrics.duplicated(["fold", "model"]).any():
+        raise ValueError("Duplicate fold/model metric rows")
+    fold_sets = {
+        model: set(group["fold"].tolist())
+        for model, group in fold_metrics.groupby("model", sort=True)
+    }
+    if not fold_sets:
+        raise ValueError("Fold metrics are empty")
+    reference_folds = next(iter(fold_sets.values()))
+    if any(folds != reference_folds for folds in fold_sets.values()):
+        raise ValueError("Missing fold/model pair; paired bootstrap requires complete folds")
+    if not np.isfinite(fold_metrics[metric].to_numpy(dtype=float)).all():
+        raise ValueError("Fold metrics contain non-finite values")
+    pivot = fold_metrics.pivot(index="fold", columns="model", values=metric)
     if baseline not in pivot.columns:
         raise ValueError(f"Baseline {baseline!r} is absent")
     rng = np.random.default_rng(seed)

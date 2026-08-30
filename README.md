@@ -10,10 +10,15 @@ This is a model-validation research project, not a trading strategy. It makes no
 
 ## Models and evidence
 
-- Historical mean and a fixed RiskMetrics-style **EWMA lambda=0.94** baseline.
+- Historical mean and a fixed, **non-anticipating EWMA lambda=0.94** baseline (a temporal availability rule, not a causal-inference claim).
 - Ridge and Random Forest on a log target with an inner temporal calibration block inside each outer training set.
 - Five-day target, purged labels, train-derived regimes, QLIKE/RMSE, calibration bins, stability, failure analysis and illustrative decision-cost sensitivity.
 - Every canonical artifact is hashed after reports, environment and figures are written.
+
+`spy-validate validate` is a generic validator for this repository's flat run
+schema: it recomputes the derived metric tables from point-level predictions.
+`validate-reference` is stricter and additionally checks the checked-in SPY
+contract (27 folds, four canonical models and 1,620 OOF rows per model).
 
 ## Canonical reference results
 
@@ -60,6 +65,8 @@ The public synthetic demo is a deterministic functionality/reproducibility check
 python -m pip install -e .[dev]
 spy-validate demo --output-dir runs/demo
 spy-validate validate --run-dir runs/demo --source-path runs/demo/synthetic_adjusted_close.csv
+# Strictly validate the checked-in canonical public reference bundle
+spy-validate validate-reference --reference-dir results/reference_run
 ```
 
 It generates price-only synthetic adjusted-close data, then derives targets, purged folds, model outputs, reports and hashes through the same pipeline used for the private audit. Synthetic metrics must not be combined with the canonical SPY table.
@@ -75,6 +82,7 @@ The CSV alternative requires `date` and `adjusted_close` columns. Raw-close-only
 
 ## Read next
 
+- [`docs/MATHEMATICAL_CONTRACT.md`](docs/MATHEMATICAL_CONTRACT.md) — definitions, assumptions, purge rule and fold-level uncertainty unit.
 - [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md)
 - [`docs/CALIBRATION_AUDIT.md`](docs/CALIBRATION_AUDIT.md)
 - [`docs/DATA_AND_REPRODUCIBILITY.md`](docs/DATA_AND_REPRODUCIBILITY.md)
@@ -83,6 +91,8 @@ The CSV alternative requires `date` and `adjusted_close` columns. Raw-close-only
 - [`CHANGELOG.md`](CHANGELOG.md)
 - [`results/reference_run/REPORT.md`](results/reference_run/REPORT.md)
 - [`results/reference_run/PUBLIC_REFERENCE_MANIFEST.json`](results/reference_run/PUBLIC_REFERENCE_MANIFEST.json)
+- [`schemas/public_reference_manifest.schema.json`](schemas/public_reference_manifest.schema.json)
+- [`schemas/math_claims.schema.json`](schemas/math_claims.schema.json)
 - [`docs/REFERENCES.md`](docs/REFERENCES.md)
 
 ![Canonical validation overview](docs/assets/overview.png)

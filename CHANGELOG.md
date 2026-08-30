@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+- Split `spy-validate validate` into a generic self-describing run validator and
+  a strict `validate-reference` SPY contract validator.
+- Add JSON Schemas for public mathematical claims and the reference manifest,
+  including explicit raw-byte and Git-LF hash modes.
+- Cache synthetic test runs so contract-failure cases remain complete without
+  rebuilding the full pipeline for every assertion. Canonical scientific
+  artifacts are unchanged.
+
+## 0.2.0 candidate
+
+- `spy-validate validate` now recomputes fold, aggregate, regime, calibration
+  and decision-cost tables from predictions instead of trusting manifest check
+  labels alone.
+- `spy-validate validate-reference` retains the strict SPY reference contract;
+  the generic validator remains scoped to this repository's flat run schema.
+- JSON Schema validation is available after a base `pip install .`; the public
+  package version is a candidate only until the release gate is approved.
+
 ## [0.1.0] - release candidate
 
 - Added purged expanding walk-forward validation for a five-day realised-variance proxy.

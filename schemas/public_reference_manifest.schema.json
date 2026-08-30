@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SPY public reference manifest v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_version", "scope", "canonical_run_id", "canonical_experiment_code_commit",
+    "canonical_experiment_package_version", "validator_release_version", "manifest_schema_version",
+    "math_claims_schema_version", "reference_artifact_commit", "release_validator_commit",
+    "canonical_code_commit", "canonical_git_commit", "artifact_repository_commit", "source_sha256",
+    "config_sha256", "environment", "folds", "models", "oof_rows_per_model",
+    "checks", "public_note", "public_artifact_sha256",
+    "public_artifact_hash_details", "hash_contract"
+  ],
+  "properties": {
+    "manifest_version": {"type": "integer", "const": 3},
+    "scope": {"type": "string", "minLength": 1},
+    "canonical_run_id": {"type": "string", "minLength": 1},
+    "canonical_experiment_code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "canonical_experiment_package_version": {"type": "string", "minLength": 1},
+    "validator_release_version": {"type": "string", "minLength": 1},
+    "manifest_schema_version": {"type": "integer", "const": 3},
+    "math_claims_schema_version": {"type": "string", "const": "1.0"},
+    "reference_artifact_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "release_validator_commit": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      ]
+    },
+    "canonical_code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "canonical_git_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "artifact_repository_commit": {"type": "string", "minLength": 1},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "environment": {"type": "object"},
+    "folds": {"type": "integer", "minimum": 1},
+    "models": {
+      "type": "array", "items": {"type": "string", "minLength": 1},
+      "minItems": 1, "uniqueItems": true
+    },
+    "oof_rows_per_model": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"type": "integer", "minimum": 1}
+    },
+    "checks": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"type": "string", "const": "PASS"}
+    },
+    "public_note": {"type": "string", "minLength": 1},
+    "public_artifact_sha256": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    },
+    "public_artifact_hash_details": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {
+        "type": "object", "additionalProperties": false,
+        "required": ["content_type", "hash_algorithm", "hash_mode", "canonical_sha256"],
+        "properties": {
+          "content_type": {"type": "string", "enum": ["text", "binary"]},
+          "hash_algorithm": {"const": "sha256"},
+          "hash_mode": {"type": "string", "enum": ["git-lf-v1", "raw-bytes"]},
+          "canonical_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "source_raw_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        },
+        "allOf": [
+          {"if": {"properties": {"content_type": {"const": "text"}}},
+           "then": {"required": ["source_raw_sha256"],
+                     "properties": {"hash_mode": {"const": "git-lf-v1"}}}},
+          {"if": {"properties": {"content_type": {"const": "binary"}}},
+           "then": {"properties": {"hash_mode": {"const": "raw-bytes"}}}}
+        ]
+      }
+    },
+    "hash_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_sha256_mode", "text_normalization_mode", "binary_hash_mode", "canonical_hash_field"],
+      "properties": {
+        "artifact_sha256_mode": {"const": "canonical_by_hash_mode"},
+        "text_normalization_mode": {"const": "git-lf-v1"},
+        "binary_hash_mode": {"const": "raw-bytes"},
+        "canonical_hash_field": {"const": "canonical_sha256"},
+        "text_normalization_note": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

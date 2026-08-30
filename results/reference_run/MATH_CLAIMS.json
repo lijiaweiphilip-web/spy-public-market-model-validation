@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "math_claims_schema_version": "1.0",
+  "task": "SPY five-day realised-variance proxy validation",
+  "asset": "SPY",
+  "data_field": "adjusted_close",
+  "target_definition": "sum of squared log returns over the next five trading days",
+  "target_horizon_days": 5,
+  "fold_protocol": "purged_expanding_walk_forward",
+  "folds": 27,
+  "models": [
+    "ewma_baseline",
+    "mean_baseline",
+    "random_forest",
+    "ridge"
+  ],
+  "metrics": [
+    "rmse",
+    "qlike"
+  ],
+  "bootstrap_metrics": [
+    "qlike",
+    "rmse"
+  ],
+  "ewma_lambda": 0.94,
+  "metric_definitions": {
+    "qlike": "actual/prediction - log(actual/prediction) - 1 with a positive floor",
+    "rmse": "square root of mean squared forecast error"
+  },
+  "oof_rows_per_model": {
+    "ewma_baseline": 1620,
+    "mean_baseline": 1620,
+    "random_forest": 1620,
+    "ridge": 1620
+  },
+  "primary_observation": "ewma_baseline has the lowest aggregate QLIKE (0.490342) in this reference run; this is descriptive model validation.",
+  "negative_result": "Ridge QLIKE (19.969421) is materially less stable than the non-anticipating EWMA baseline (0.490342) in the retained reference evidence.",
+  "canonical_run_id": "20260825T112527Z",
+  "canonical_experiment_code_commit": "69dbbab8d6ea5d461c799416c0017e8960ca0afc",
+  "canonical_experiment_package_version": "0.1.0",
+  "validator_release_version": "0.2.0",
+  "manifest_schema_version": 3,
+  "reference_artifact_commit": "9b732b1c448d436e59808b816dfec2b2567996e0",
+  "release_validator_commit": null,
+  "claims_generator_sha256": "9b80fb7385235db7c9e3bc774f8ad56dd6439188d98a3969fdda7508701f6993",
+  "mathematical_contract_sha256": "2b8c88a384ee4866034af2a142449b50f67733193fcc10296faa13dda5ef440d",
+  "mathematical_contract_normalized_sha256": "2b8c88a384ee4866034af2a142449b50f67733193fcc10296faa13dda5ef440d",
+  "mathematical_contract_hash_mode": "git-lf-v1",
+  "reference_manifest_version": 3,
+  "generated_from_artifacts": [
+    "results/reference_run/config_used.json",
+    "results/reference_run/environment.json",
+    "results/reference_run/aggregate_metrics.csv",
+    "results/reference_run/fold_metrics.csv",
+    "results/reference_run/bootstrap_model_comparison.csv",
+    "results/reference_run/failure_analysis.md",
+    "docs/MATHEMATICAL_CONTRACT.md"
+  ],
+  "provenance_note": "canonical_experiment_code_commit identifies the locked reference run; canonical_experiment_package_version identifies the environment that generated its metrics; validator_release_version identifies this validator package. release_validator_commit is null by design to avoid a self-referential commit hash; Git history records the release commit. claims_generator_sha256 and mathematical_contract hashes identify the derivation inputs.",
+  "non_claims": [
+    "causal inference",
+    "trading strategy",
+    "alpha",
+    "P&L",
+    "profitability",
+    "production benchmark",
+    "cross-asset generalisation",
+    "independent OOF rows"
+  ]
+}

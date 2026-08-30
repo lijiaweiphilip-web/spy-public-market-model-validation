@@ -14,6 +14,7 @@ from .data import fetch_yahoo_chart, load_adjusted_close_csv, load_yahoo_chart
 from .evaluation import add_decision_cost_diagnostics, run_walk_forward
 from .features import build_feature_frame
 from .reporting import write_outputs
+from .validation import validate_reference_contract, validate_run_dir
 
 
 def _execute_pipeline(
@@ -104,9 +105,12 @@ def demo_command(args: argparse.Namespace) -> int:
             "minimum_training_rows": 300,
             "test_rows_per_fold": 30,
             "step_rows": 30,
-            "forest_estimators": min(base_cfg.forest_estimators, 12),
+            # The public demo is a wiring/reproducibility check, not a model
+            # comparison.  One tree keeps it deterministic and lightweight
+            # without changing the canonical reference configuration.
+            "forest_estimators": min(base_cfg.forest_estimators, 1),
             "calibration_block_rows": min(base_cfg.calibration_block_rows, 60),
-            "bootstrap_repetitions": min(base_cfg.bootstrap_repetitions, 100),
+            "bootstrap_repetitions": min(base_cfg.bootstrap_repetitions, 20),
             "output_dir": str(output_dir),
         }
     )
@@ -133,117 +137,18 @@ def demo_command(args: argparse.Namespace) -> int:
     return 0
 
 
-def validate_run_dir(
-    run_dir: Path,
-    source_path: Path | None = None,
-    config_path: Path | None = None,
-) -> dict:
-    run_dir = Path(run_dir).resolve()
-    manifest_path = run_dir / "run_manifest.json"
-    if not manifest_path.exists():
-        raise FileNotFoundError(manifest_path)
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    hashes = manifest.get("artifact_sha256")
-    if not isinstance(hashes, dict) or not hashes:
-        raise RuntimeError("Manifest has no artifact_sha256 map")
-    missing = [name for name in hashes if not (run_dir / name).is_file()]
-    if missing:
-        raise RuntimeError(f"Manifest artifacts are missing: {missing}")
-    actual_files = {
-        path.name for path in run_dir.iterdir() if path.is_file() and path.name != "run_manifest.json"
-    }
-    unexpected = sorted(actual_files - set(hashes))
-    if unexpected:
-        raise RuntimeError(f"Unhashed run artifacts present: {unexpected}")
-    mismatched = {
-        name: (expected, _sha256(run_dir / name))
-        for name, expected in hashes.items()
-        if expected != _sha256(run_dir / name)
-    }
-    if mismatched:
-        raise RuntimeError(f"Manifest hash mismatch: {mismatched}")
-
-    config_file = run_dir / str(manifest.get("config_file", "config_used.json"))
-    if not config_file.is_file() or _sha256(config_file) != manifest.get("config_sha256"):
-        raise RuntimeError("Config hash does not match the manifest")
-    if config_path is not None and _sha256(config_path) != manifest.get("config_sha256"):
-        raise RuntimeError("Supplied config hash does not match the manifest")
-    if source_path is not None and _sha256(source_path) != manifest.get("source_sha256"):
-        raise RuntimeError("Supplied source hash does not match the manifest")
-
-    required = {"predictions_oof.csv", "fold_metrics.csv", "aggregate_metrics.csv", "regime_metrics.csv", "calibration_bins.csv", "decision_cost_sensitivity.csv", "failure_analysis.md", "model_card.md", "REPORT.md", "environment.json", "config_used.json"}
-    if not required.issubset(hashes):
-        raise RuntimeError(f"Manifest required artifacts are incomplete: {sorted(required - set(hashes))}")
-    if manifest.get("folds") != 27:
-        raise RuntimeError(f"Expected 27 folds in the reference configuration; got {manifest.get('folds')}")
-    models = set(manifest.get("models", []))
-    if models != {"mean_baseline", "ewma_baseline", "ridge", "random_forest"}:
-        raise RuntimeError(f"Unexpected models in manifest: {sorted(models)}")
-    if manifest.get("checks", {}).get("artifact_hashes_complete") != "PASS":
-        raise RuntimeError("Manifest artifact completeness check is absent")
-    if any(value != "PASS" for value in manifest.get("checks", {}).values()):
-        raise RuntimeError(f"A manifest check is not PASS: {manifest.get('checks')}")
-
-    predictions = pd.read_csv(run_dir / "predictions_oof.csv")
-    expected_columns = {"fold", "model", "feature_date", "target_start_date", "target_end_date", "actual", "prediction", "regime"}
-    if not expected_columns.issubset(predictions.columns):
-        raise RuntimeError(f"Prediction columns are incomplete: {sorted(expected_columns - set(predictions.columns))}")
-    if set(predictions["model"].unique()) != models:
-        raise RuntimeError("Prediction model set differs from the manifest")
-    if predictions.duplicated(["fold", "model", "feature_date"]).any():
-        raise RuntimeError("Duplicate fold/model/feature-date prediction rows")
-    if not np.isfinite(predictions[["actual", "prediction"]].to_numpy(dtype=float)).all():
-        raise RuntimeError("Predictions contain non-finite values")
-    if (predictions[["actual", "prediction"]] <= 0).any().any():
-        raise RuntimeError("Actual or prediction is non-positive")
-    feature_date = pd.to_datetime(predictions["feature_date"], utc=True)
-    target_start = pd.to_datetime(predictions["target_start_date"], utc=True)
-    target_end = pd.to_datetime(predictions["target_end_date"], utc=True)
-    if not (feature_date < target_start).all() or not (target_start <= target_end).all():
-        raise RuntimeError("Prediction timestamp ordering is invalid")
-    expected_rows = manifest.get("oof_rows_per_model", {})
-    actual_rows = predictions.groupby("model").size().astype(int).to_dict()
-    if actual_rows != {str(k): int(v) for k, v in expected_rows.items()}:
-        raise RuntimeError(f"OOF row counts differ: expected {expected_rows}, actual {actual_rows}")
-    expected_rows_per_fold = int(manifest.get("test_rows_per_fold", 0))
-    if predictions.groupby(["model", "fold"]).size().nunique() != 1 or (predictions.groupby(["model", "fold"]).size() != expected_rows_per_fold).any():
-        raise RuntimeError("Each model/fold does not have the configured test row count")
-
-    fold_metrics = pd.read_csv(run_dir / "fold_metrics.csv")
-    if len(fold_metrics) != len(models) * int(manifest["folds"]):
-        raise RuntimeError("Fold metric row count is inconsistent with models and folds")
-    train_end = pd.to_datetime(fold_metrics["train_target_end"], utc=True)
-    test_start = pd.to_datetime(fold_metrics["test_start"], utc=True)
-    if not (train_end < test_start).all():
-        raise RuntimeError("Training labels overlap the test period")
-    if fold_metrics.duplicated(["fold", "model"]).any():
-        raise RuntimeError("Duplicate fold/model metric rows")
-    return {
-        "status": "PASS",
-        "run_dir": str(run_dir),
-        "folds": int(manifest["folds"]),
-        "models": sorted(models),
-        "artifact_hashes_verified": len(hashes),
-        "oof_rows_per_model": actual_rows,
-    }
-
-
-def _sha256(path: Path) -> str:
-    import hashlib
-
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def validate_command(args: argparse.Namespace) -> int:
     result = validate_run_dir(
         Path(args.run_dir),
         Path(args.source_path).resolve() if args.source_path else None,
         Path(args.config_path).resolve() if args.config_path else None,
     )
+    print(json.dumps(result, indent=2))
+    return 0
+
+
+def validate_reference_command(args: argparse.Namespace) -> int:
+    result = validate_reference_contract(Path(args.reference_dir))
     print(json.dumps(result, indent=2))
     return 0
 
@@ -269,6 +174,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--source-path")
     validate.add_argument("--config-path")
     validate.set_defaults(func=validate_command)
+    reference = subparsers.add_parser(
+        "validate-reference", help="validate the checked-in canonical public reference bundle"
+    )
+    reference.add_argument("--reference-dir", required=True)
+    reference.set_defaults(func=validate_reference_command)
     return parser
 
 
