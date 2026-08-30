@@ -4,6 +4,7 @@ authors:
   - family-names: Li
     given-names: Jiawei
 version: 0.2.0
+date-released: 2026-08-30
 repository-code: https://github.com/lijiaweiphilip-web/spy-public-market-model-validation
 message: "If this research code is useful, please cite this repository."
 license: MIT
