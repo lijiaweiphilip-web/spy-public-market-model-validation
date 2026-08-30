@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 - 2026-08-30
 
 - Split `spy-validate validate` into a generic self-describing run validator and
   a strict `validate-reference` SPY contract validator.
@@ -10,17 +10,14 @@
   rebuilding the full pipeline for every assertion. Canonical scientific
   artifacts are unchanged.
 
-## 0.2.0 candidate
-
 - `spy-validate validate` now recomputes fold, aggregate, regime, calibration
   and decision-cost tables from predictions instead of trusting manifest check
-  labels alone.
+  labels alone. The public package and manifest contract are now released.
 - `spy-validate validate-reference` retains the strict SPY reference contract;
   the generic validator remains scoped to this repository's flat run schema.
-- JSON Schema validation is available after a base `pip install .`; the public
-  package version is a candidate only until the release gate is approved.
+- JSON Schema validation is available after a base `pip install .`.
 
-## [0.1.0] - release candidate
+## [0.1.0] - 2026-08-26
 
 - Added purged expanding walk-forward validation for a five-day realised-variance proxy.
 - Added fixed RiskMetrics-style EWMA (`lambda=0.94`) alongside historical mean, Ridge and Random Forest baselines.
@@ -28,5 +25,3 @@
 - Added Python 3.10-3.12 CI with coverage, compile and Ruff checks.
 - Kept vendor raw bytes, point-level predictions, exposure paths and canonical private evidence outside the public-safe derived bundle.
 - Clarified public documentation boundaries and refreshed the overview figure, provenance wording and method references.
-
-The release date is intentionally omitted until a GitHub `v0.1.0` release is explicitly approved and created.
