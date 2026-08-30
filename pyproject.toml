@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spy-public-market-model-validation"
-version = "0.2.0"
+version = "0.2.1"
 description = "Evidence-first walk-forward validation of simple volatility-proxy models on SPY daily data."
 readme = "README.md"
 requires-python = ">=3.10"

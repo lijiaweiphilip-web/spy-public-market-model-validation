@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 - 2026-08-30
+
+- Correctness-only schema packaging patch: the root and packaged
+  `math_claims.schema.json` now have identical bytes and the complete
+  provenance `required` set.
+- No canonical predictions, metrics, figures, seeds, or scientific conclusions
+  changed.
+
 ## 0.2.0 - 2026-08-30
 
 - `spy-validate validate` now recomputes fold, aggregate, regime, calibration

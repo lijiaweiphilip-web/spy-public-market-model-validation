@@ -11,6 +11,27 @@ from spy_validation.validation import _validate_json_schema, validate_reference_
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_packaged_math_claims_schema_is_byte_identical_to_public_copy() -> None:
+    packaged = (ROOT / "src" / "spy_validation" / "schemas" / "math_claims.schema.json").read_bytes()
+    public = (ROOT / "schemas" / "math_claims.schema.json").read_bytes()
+    assert packaged == public
+
+
+def test_packaged_math_claims_schema_requires_provenance_contract() -> None:
+    schema = json.loads(
+        (ROOT / "src" / "spy_validation" / "schemas" / "math_claims.schema.json").read_text(encoding="utf-8")
+    )
+    required = set(schema["required"])
+    assert {
+        "math_claims_schema_version",
+        "canonical_experiment_package_version",
+        "validator_release_version",
+        "manifest_schema_version",
+        "reference_artifact_commit",
+        "release_validator_commit",
+    } <= required
+
+
 def test_math_claims_schema_rejects_missing_required_field(tmp_path: Path) -> None:
     claims_path = ROOT / "results" / "reference_run" / "MATH_CLAIMS.json"
     claims = json.loads(claims_path.read_text(encoding="utf-8"))
